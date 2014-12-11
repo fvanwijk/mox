@@ -1,0 +1,30 @@
+{
+  "name": "Mox",
+  "main": "mox.js",
+  "version": "0.1.0",
+  "authors": [
+    "Frank van Wijk <fvanwijk@xebia.com>"
+  ],
+  "description": "Mocking framework for AngularJS apps",
+  "keywords": [
+    "angularjs",
+    "mocks",
+    "jasmine",
+    "karma"
+  ],
+  "license": "MIT",
+  "homepage": "http://www.frankvanwijk.nl",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "devDependencies": {
+    "angular-mocks": "1.2.21",
+    "jasmine-jquery": "1.7.0",
+    "Sinon.JS": "http://sinonjs.org/releases/sinon-1.8.2.js",
+    "underscore": "1.6.0"
+  }
+}
