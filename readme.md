@@ -111,7 +111,7 @@ Multiple services:
 
 Returns the Mox instance to make chaining possible.
 
-### mox().mockDirectives();
+### mox().mockDirectives()
 
 Register directive(s) to be mocked.
 
@@ -123,14 +123,14 @@ Accepts 3 types of input:
 
 Returns the Mox instance to make chaining possible.
 
-### mox().disableDirectives();
+### mox().disableDirectives()
 
 "Disables" the given list of directives, not just mocking them.
 Accepts directive name or array with directive names to disable.
 
 Returns the Mox instance to make chaining possible.
 
-### mox().mockController();
+### mox().mockController()
 
 Registers a controller to be mocked. This is useful for view specs where the template contains an `ng-controller`.
 The view's `$scope` is not set by the controller anymore, but you have to set the `$scope` manually.
@@ -139,7 +139,7 @@ The view's `$scope` is not set by the controller anymore, but you have to set th
 
 Returns the Mox instance to make chaining possible.
 
-### mox().go();
+### mox().go()
 
 Executes all registered stuff so that the actual mocking is done. If you forget to call `go()`, nothing will be mocked.
 The real services will be overwritten by mocks via `$provide.value`, so when you inject `FooService`, you get the mocked service, including
@@ -240,10 +240,9 @@ Finally this framework contains a lot of utility functions:
 
 * `createScope`: Creates a new $rootScope child. The optional passed argument is an object 
 * `createController(controllerName)`: Creates and initialized a controller
-* `setupResourceSpec`: Injects the requests resource and mocks AppState (TODO: remove, because it is project specific stuff)
 * `mockDate`: Mock the current date. Specs that use momentjs or Date depend on the current date will introduce
 unreliable behaviour when the current date is not mocked.
-* `getMockData(fileName)`: Ansynchonuously loads the contents of a JSON file. The argument is a path without '.json'.
+* `getMockData(fileName)`: Asynchronously loads the contents of a JSON file. The argument is a path without '.json'.
 
 ### Compile shortcuts
 
@@ -306,9 +305,9 @@ Extends the element with its children. The children are accessible via the provi
     mox().mockTemplates().go();
     
 * Throw readable exceptions when trying to call one of the registration functions when the injector is already initialized (after calling `go()`).
-* Do not use mockConfig for spy objects with some spy functions. I prefer to somehow inspect the currently registered service to mock all its methods.
+* Do not use moxConfig for spy objects with some spy functions. I prefer to somehow inspect the currently registered service to mock all its methods.
 * Get rid of the detection mechanism for filters and resources. Most filter names do not end with `Filter`, as with the resources.
-* Make arguments in mock configuration not nested obejcts, but use a dot notation key to navigate to the spy, eg. `{ fooService.barMethod: data }`
+* Make arguments in mock configuration not nested objects, but use a dot notation key to navigate to the spy, eg. `{ fooService.barMethod: data }`
 
 ## Contributors
 
