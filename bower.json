@@ -1,5 +1,5 @@
 {
-  "name": "Mox",
+  "name": "mox",
   "main": "mox.js",
   "version": "0.1.0",
   "authors": [
@@ -21,7 +21,7 @@
     "test",
     "tests"
   ],
-  "devDependencies": {
+  "dependencies": {
     "angular-mocks": "1.2.21",
     "jasmine-jquery": "1.7.0",
     "Sinon.JS": "http://sinonjs.org/releases/sinon-1.8.2.js",
