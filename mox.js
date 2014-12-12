@@ -359,25 +359,6 @@ function createController(ctrlName, $scope, locals) {
 }
 
 /**
- * Shortcut function for setting up a resource spec.
- * This returns the resource to test, so that it can be used in you `expects`. It also mocks AppState for you, to make
- * sure that the relationId and productId in the api URL are set by mock ids.
- *
- * @param {string} moduleName
- * @param {string} resourceName
- *
- * @returns {Object} the resource to be tested
- */
-function setupResourceSpec(moduleName, resourceName) {
-  mox()
-    .module(moduleName)
-    .mockServices('AppState')
-    .go();
-
-  return injectEnv(resourceName);
-}
-
-/**
  * Mock the current date.
  * Specs that use momentjs or Date depend on the current date
  * will introduce unreliable behaviour when the current date is not mocked.
