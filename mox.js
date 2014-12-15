@@ -37,12 +37,12 @@ MoxBuilder.prototype.mockServices = function MockServices(mockNames) {
   mockNames = [].concat(mockNames);
 
   var registerFn = function ($provide) {
-    _.each(mockNames, function (mockName) {
+    angular.forEach(mockNames, function (mockName) {
       var mockArgs = [$provide];
 
-      if (_.isArray(mockName)) {
-        mockArgs = _.union(mockArgs, _.rest(mockName));
-        mockName = _.first(mockName);
+      if (angular.isArray(mockName)) {
+        var mockArgs = angular.copy(mockName).concat(mockArgs);
+        mockName = mockArgs.pop();
       }
 
       if (mockName in mox.factories) {
@@ -74,10 +74,10 @@ MoxBuilder.prototype.mockServices = function MockServices(mockNames) {
  * @returns {Object}
  */
 MoxBuilder.prototype.mockDirectives = function mockDirectives(directives) {
-  directives = !_.isArray(directives) ? [directives] : directives;
+  directives = [].concat(directives);
   var directiveFn = function directiveFn($provide) {
-    _.each(directives, function (directive) {
-      var mock = _.isObject(directive) ? directive : { name: directive };
+    angular.forEach(directives, function (directive) {
+      var mock = angular.isString(directive) ? { name: directive } : directive;
       mock = _.defaults(mock, {
         priority: 0,
         restrict: 'EAC',
@@ -100,10 +100,10 @@ MoxBuilder.prototype.mockDirectives = function mockDirectives(directives) {
  * @returns {Object}
  */
 MoxBuilder.prototype.disableDirectives = function (directives) {
-  directives = !_.isArray(directives) ? [directives] : directives;
+  directives = [].concat(directives);
   var directiveFn = function directiveFn($provide) {
-    _.each(directives, function (directive) {
-      $provide.factory(directive + 'Directive', _.constant({}));
+    angular.forEach(directives, function (directive) {
+      $provide.factory(directive + 'Directive', function() { return {}; });
     });
   };
 
@@ -149,15 +149,16 @@ MoxBuilder.prototype.go = function go() {
 MoxBuilder.prototype.mockTemplates = function mockTemplates(templates) {
   var $templateCache = injectEnv('$templateCache');
   templates = [].concat(templates);
-  _.each(templates, function (templateConfig) {
+  angular.forEach(templates, function (templateConfig) {
     var path;
     var template;
-    if (_.isString(templateConfig)) {
+    if (angular.isString(templateConfig)) {
       path = templateConfig;
       template = '<div>This is a mock for ' + path + '</div>';
     } else {
-      path = _.keys(templateConfig)[0];
-      template = templateConfig[path];
+      angular.forEach(templateConfig, function(template, path) {
+        return;
+      });
     }
     $templateCache.put(path, template);
   });
@@ -176,17 +177,17 @@ MoxBuilder.prototype.mockTemplates = function mockTemplates(templates) {
  *   MockResource2: {
  *     query: fakeFunction
  *   },
- *   MockFilter: 'returnValueString' // object as return value not allowed! Will be solved when _.getPath is available
+ *   MockFilter: 'returnValueString' // object as return value not allowed!
  * });
  *
  * @return {Object}
  */
 MoxBuilder.prototype.setupResults = function setupResults(config) {
-  _.each(config, function (mockConfig, mockName) {
+  angular.forEach(config, function (mockConfig, mockName) {
     var mock = mox.get[mockName];
 
     function setSpyResult(spy, returnValue) {
-      if (_.isFunction(returnValue)) {
+      if (typeof returnValue == 'function' || false) {
         spy.andCallFake(returnValue);
       } else {
         spy.andReturn(returnValue);
@@ -194,8 +195,8 @@ MoxBuilder.prototype.setupResults = function setupResults(config) {
     }
 
     // Iterate over methods of mock
-    if (typeof mockConfig === 'object' && mockConfig.constructor === Object) { // _.isPlainObject
-      _.each(mockConfig, function (returnValue, method) {
+    if (typeof mockConfig === 'object' && mockConfig.constructor === Object) {
+      angular.forEach(mockConfig, function (returnValue, method) {
         if (!(method in mock)) {
           throw new Error('Could not mock return value. No method ' + method + ' created in mock for ' + mockName);
         }
@@ -266,18 +267,21 @@ mox.createMock = function createMock(mockName, mockedMethods) {
 mox.createResourceMock = function createResourceMock(mockName, optionalMethods) {
   var defaultMethods = ['get', 'query', 'save', 'update', 'remove', 'delete'];
   var allStaticMethods = _.union(defaultMethods, optionalMethods || []);
-  var allInstanceMethods = _.map(allStaticMethods, function (method) {
-    return '$' + method;
+  var allInstanceMethods = [];
+  angular.forEach(allStaticMethods, function (method) {
+    allInstanceMethods.push('$' + method);
   });
   return function ($provide) {
-
     var mock = jasmine.createSpyObj(mockName, _.union(allStaticMethods, allInstanceMethods, ['constructor']));
 
     // Create a mocked constructor that returns the mock itself plus the data that is provided as argument
     mock.constructor.andCallFake(function (data) {
-      return _.extend({}, mock, data);
+      var constructor = angular.copy(mock);
+      angular.extend(constructor, data);
     });
-    _.extend(mock.constructor, mock);
+
+    angular.extend(mock.constructor, mock);
+
     if ($provide) {
       $provide.value(mockName, mock.constructor);
       mox.get[mockName] = mock;
@@ -322,7 +326,7 @@ beforeEach(function initHandlerCallbacks() {
  * @returns {*}
  */
 function copy(input) {
-  if (_.isObject(input) && !_.isFunction(input)) {
+  if (angular.isObject(input) && !angular.isFunction(input)) {
     return JSON.parse(JSON.stringify(input));
   }
   return angular.copy(input);
@@ -341,7 +345,7 @@ function copy(input) {
 function createScope(params) {
   var $scope = injectEnv('$rootScope').$new();
   if (params) {
-    _.extend($scope, params);
+    angular.extend($scope, params);
   }
   return $scope;
 }
@@ -355,7 +359,7 @@ function createScope(params) {
  * @returns {*}
  */
 function createController(ctrlName, $scope, locals) {
-  return injectEnv('$controller')(ctrlName, _.extend({ $scope: $scope }, locals || {}));
+  return injectEnv('$controller')(ctrlName, angular.extend({ $scope: $scope }, locals || {}));
 }
 
 /**
@@ -495,7 +499,7 @@ function reject(error) {
  * The second argument must be the mock that has the $-methods to set on the $resource result
  */
 function resourceResult(result, mock) {
-  _.each(mock, function (fn, fnName) {
+  angular.forEach(mock, function (fn, fnName) {
     if (fnName[0] === '$') {
       result[fnName] = fn;
     }
@@ -531,15 +535,15 @@ function extendElement(element) {
   element.findBinding = function (binding) {
     var bindings = element.find('.ng-binding');
     var matches = [];
-    for (var i = 0; i < bindings.length; ++i) {
-      var dataBinding = angular.element(bindings[i]).data('$binding');
+    angular.forEach(bindings, function (bindingElem){
+      var dataBinding = angular.element(bindingElem).data('$binding');
       if (dataBinding) {
         var bindingName = dataBinding.exp || dataBinding[0].exp || dataBinding;
         if (bindingName.indexOf(binding) !== -1) {
           matches.push(bindings[i]);
         }
       }
-    }
+    });
     return $(matches);
   };
   return element;
@@ -559,10 +563,10 @@ function extendElement(element) {
  */
 function extendedElement(e, extensions) {
   var exts = {};
-  _.each(extensions, function (value, key) {
+  angular.forEach(extensions, function (value, key) {
     exts[key] = e.find(value);
   });
-  return _.extend(e, exts);
+  return angular.extend(e, exts);
 }
 
 /**
@@ -577,10 +581,16 @@ function extendedElement(e, extensions) {
  * element.name.text() // Your name
  */
 function extendedElementWithChildren(e, keys) {
-  var children = _.map(e.children(), function (child) {
-    return angular.element(child);
+  var children = [];
+  angular.forEach(e.children(), function (child) {
+    children.push(angular.element(child));
   });
-  return _.extend(e, _.object(keys, children));
+
+  var pairs = {};
+  angular.forEach(children, function (value, i) {
+    pairs[keys[i]] = value;
+  });
+  return angular.extend(e, pairs);
 }
 
 /**
