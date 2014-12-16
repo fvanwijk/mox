@@ -4,8 +4,7 @@
 var moxConfig = {};
 
 /**
- * Mox mocking framework with the X from Xebia (and it contains less characters, so saves bytes!)
- * This will be moved to a separate library and included via Bower soon.
+ * Constructor function for a Mox object
  */
 function MoxBuilder() {
 

@@ -192,12 +192,6 @@ Or:
     
 ## Static methods/properties
 
-### mox.get()
-
-When a mock is registered, you can get the mock without injecting it.
-
-    var fooService = mox.get.FooService;
-
 ### mox.save()
 
 Registers a mock and save it to the cache.
@@ -206,8 +200,14 @@ This method usually is used when defining a custom mock factory function or when
     mox.save($provide, 'FooService', fooServiceMock);
 
 Returns the saved mock.
+
+### mox.get
+
+When a mock is registered, you can get the mock without injecting it.
+
+    var fooService = mox.get.FooService;
     
-### mox.factories()
+### mox.factories
 
 Call a mock factory function manually without chaining via `mox()`.
 The factory functions needs to be defined in moxConfig.
