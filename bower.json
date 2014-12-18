@@ -1,7 +1,7 @@
 {
   "name": "mox",
-  "main": "mox.js",
-  "version": "0.1.0",
+  "main": "src/mox.js",
+  "version": "0.2.0",
   "authors": [
     "Frank van Wijk <fvanwijk@xebia.com>"
   ],
