@@ -1,4 +1,4 @@
-_.extend(moxConfig, {
+angular.extend(moxConfig, {
   // Insert mock factory function, eg.
   // FooService: mox.createMock('FooService', ['getBars']),
   // BazService: function ($provide) {

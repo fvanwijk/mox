@@ -9,286 +9,289 @@ var moxConfig = {};
 function MoxBuilder() {
 
   this.moduleFns = [];
+  this.factories = moxConfig; // Factory functions for creating mocks
+  this.get = {}; // Cache for mocked things
 
-  return this;
-}
 
-/**
- * Saves modules or module config functions to be passed to angular.mocks.module when .go() is called.
- *
- * @returns {Object}
- */
-MoxBuilder.prototype.module = function module() {
-  this.moduleFns = Array.prototype.slice.call(arguments, 0);
-  this.get = {};
+  /**
+   * Saves modules or module config functions to be passed to angular.mocks.module when .go() is called.
+   *
+   * @returns {Object}
+   */
+  this.module = function module() {
+    this.moduleFns = Array.prototype.slice.call(arguments, 0);
 
-  return this;
-};
-
-/**
- * Return module config function for registering mock services.
- * It creates mocks for resources and filters automagically.
- * The created mock is saved to the mox.get object for easy retrieval.
- *
- * @param {string|string[]} mockNames
- */
-MoxBuilder.prototype.mockServices = function MockServices(mockNames) {
-  mockNames = [].concat(mockNames);
-
-  var registerFn = function ($provide) {
-    angular.forEach(mockNames, function (mockName) {
-      var mockArgs = [$provide];
-
-      if (angular.isArray(mockName)) {
-        var mockArgs = angular.copy(mockName).concat(mockArgs);
-        mockName = mockArgs.pop();
-      }
-
-      if (mockName in mox.factories) {
-        mox.factories[mockName].apply(this, mockArgs);
-      } else if (mockName.indexOf('Resource', mockName.length - 8) !== -1) {
-        mox.createResourceMock(mockName)($provide);
-      } else if (mockName.indexOf('Filter', mockName.length - 6) !== -1) {
-        mox.createMock(mockName)($provide);
-      } else {
-        throw new Error('Mock ' + mockName + ' does not exist. Is it in MoxConfig with the correct casing?');
-      }
-    });
+    return this;
   };
 
-  this.moduleFns.push(registerFn);
+  /**
+   * Return module config function for registering mock services.
+   * It creates mocks for resources and filters automagically.
+   * The created mock is saved to the mox.get object for easy retrieval.
+   *
+   * @param {string|string[]} mockNames
+   */
+  this.mockServices = function MockServices(mockNames) {
+    mockNames = [].concat(mockNames);
 
-  return this;
-};
+    var registerFn = function ($provide) {
+      angular.forEach(mockNames, function (mockName) {
+        var mockArgs = [$provide];
 
-/**
- * Register directive(s) to be mocked.
- *
- * Accepts 3 types of input:
- * 1. a directive name: the same as with an array, but just for one directive
- * 2. a directive factory object, for you won mock implementation (name property is required)
- * 3. an array of directive names (see 1) or objects (see 2)
- *
- * @param {string[]|string|Object[]|Object} directives Array of directives
- * @returns {Object}
- */
-MoxBuilder.prototype.mockDirectives = function mockDirectives(directives) {
-  directives = [].concat(directives);
-  var directiveFn = function directiveFn($provide) {
-    angular.forEach(directives, function (directive) {
-      var mock = angular.isString(directive) ? { name: directive } : directive;
-      mock = _.defaults(mock, {
-        priority: 0,
-        restrict: 'EAC',
-        template: '<div class="mock-' + mock.name + '">this is a ' + mock.name + '</div>'
-      });
-      $provide.factory(mock.name + 'Directive', function factory() {
-        return [mock];
-      });
-    });
-  };
-
-  this.moduleFns.push(directiveFn);
-
-  return this;
-};
-
-/*
- * This function "disables" the given list of directives, not just mocking them
- * @param {string[]|string} directives directives to disable
- * @returns {Object}
- */
-MoxBuilder.prototype.disableDirectives = function (directives) {
-  directives = [].concat(directives);
-  var directiveFn = function directiveFn($provide) {
-    angular.forEach(directives, function (directive) {
-      $provide.factory(directive + 'Directive', function() { return {}; });
-    });
-  };
-
-  this.moduleFns.push(directiveFn);
-
-  return this;
-};
-
-/**
- * Registers a controller to be mocked. This is useful for view specs where the template contains an `ng-controller`.
- * The view's `$scope` is not set by the controller anymore, but you have to set the `$scope` manually.
- *
- * @param {string} controllerName
- * @returns {Object}
- */
-MoxBuilder.prototype.mockController = function mockController(controllerName) {
-  var controllerFn = function ($controllerProvider) {
-    $controllerProvider.register(controllerName, noop);
-  };
-
-  this.moduleFns.push(controllerFn);
-
-  return this;
-};
-
-/**
- * Executes the module config functions.
- *
- * @returns result of the angular.mocks.module function
- */
-MoxBuilder.prototype.go = function go() {
-  var moduleResult = module.apply(this, this.moduleFns);
-  inject();
-  return moduleResult;
-};
-
-/**
- * Replace templates that are loaded via ng-include with a single div that contains the template name.
- *
- * @param {string|string[]|Object|Object[]} templates
- * @returns {Object}
- */
-MoxBuilder.prototype.mockTemplates = function mockTemplates(templates) {
-  var $templateCache = injectEnv('$templateCache');
-  templates = [].concat(templates);
-  angular.forEach(templates, function (templateConfig) {
-    var path;
-    var template;
-    if (angular.isString(templateConfig)) {
-      path = templateConfig;
-      template = '<div>This is a mock for ' + path + '</div>';
-    } else {
-      angular.forEach(templateConfig, function(template, path) {
-        return;
-      });
-    }
-    $templateCache.put(path, template);
-  });
-
-  return this;
-};
-
-/*
- * Define return values or fake callback methods for methods of multiple mock
- *
- * Usage:
- * mox().setupResults({
- *   MockResource1: {
- *     get: mockResult
- *   },
- *   MockResource2: {
- *     query: fakeFunction
- *   },
- *   MockFilter: 'returnValueString' // object as return value not allowed!
- * });
- *
- * @return {Object}
- */
-MoxBuilder.prototype.setupResults = function setupResults(config) {
-  angular.forEach(config, function (mockConfig, mockName) {
-    var mock = mox.get[mockName];
-
-    function setSpyResult(spy, returnValue) {
-      if (typeof returnValue == 'function' || false) {
-        spy.andCallFake(returnValue);
-      } else {
-        spy.andReturn(returnValue);
-      }
-    }
-
-    // Iterate over methods of mock
-    if (typeof mockConfig === 'object' && mockConfig.constructor === Object) {
-      angular.forEach(mockConfig, function (returnValue, method) {
-        if (!(method in mock)) {
-          throw new Error('Could not mock return value. No method ' + method + ' created in mock for ' + mockName);
+        if (angular.isArray(mockName)) {
+          var mockArgs = angular.copy(mockName).concat(mockArgs);
+          mockName = mockArgs.pop();
         }
-        setSpyResult(mock[method], returnValue);
+
+        if (mockName in mox.factories) {
+          mox.factories[mockName].apply(this, mockArgs);
+        } else if (mockName.indexOf('Resource', mockName.length - 8) !== -1) {
+          mox.createResourceMock(mockName)($provide);
+        } else if (mockName.indexOf('Filter', mockName.length - 6) !== -1) {
+          mox.createMock(mockName)($provide);
+        } else {
+          throw new Error('Mock ' + mockName + ' does not exist. Is it in MoxConfig with the correct casing?');
+        }
       });
-    } else { // the mock itself is a spy
-      setSpyResult(mock, mockConfig);
-    }
-  });
+    };
 
-  return this;
-};
+    this.moduleFns.push(registerFn);
 
-function mox() {
-  return new MoxBuilder();
-}
+    return this;
+  };
 
-mox.factories = moxConfig; // Factory functions for creating mocks
-mox.get = {}; // Cache for mocked things
+  /**
+   * Register directive(s) to be mocked.
+   *
+   * Accepts 3 types of input:
+   * 1. a directive name: the same as with an array, but just for one directive
+   * 2. a directive factory object, for you won mock implementation (name property is required)
+   * 3. an array of directive names (see 1) or objects (see 2)
+   *
+   * @param {string[]|string|Object[]|Object} directives Array of directives
+   * @returns {Object}
+   */
+  this.mockDirectives = function mockDirectives(directives) {
+    directives = [].concat(directives);
+    var directiveFn = function directiveFn($provide) {
+      angular.forEach(directives, function (directive) {
+        var mock = angular.isString(directive) ? { name: directive } : directive;
+        mock = angular.extend({
+          priority: 0,
+          restrict: 'EAC',
+          template: '<div class="mock-' + mock.name + '">this is a ' + mock.name + '</div>'
+        }, mock);
+        $provide.factory(mock.name + 'Directive', function factory() {
+          return [mock];
+        });
+      });
+    };
 
-/**
- * Registers a mock and save it to the cache.
- * This method usually is used when defining a custom mock factory function or when manually creating a mock
- *
- * @param $provide
- * @param {string} mockName
- * @param {Object} mock
- * @returns {*}
- */
-mox.save = function saveMock($provide, mockName, mock) {
-  $provide.value(mockName, mock);
-  mox.get[mockName] = mock;
-  return mock;
-};
+    this.moduleFns.push(directiveFn);
 
-/**
- * Simple wrapper around jasmine.createSpyObj, ensures a new instance is returned for every call
- *
- * @returns {Object}
- */
-mox.createMock = function createMock(mockName, mockedMethods) {
-  return function ($provide, nameOverride) {
-    var mock = (mockedMethods) ? jasmine.createSpyObj(mockName, mockedMethods) : jasmine.createSpy(mockName);
-    if ($provide) {
-      mox.save($provide, nameOverride ? nameOverride : mockName, mock);
-    }
+    return this;
+  };
 
+  /*
+   * This function "disables" the given list of directives, not just mocking them
+   * @param {string[]|string} directives directives to disable
+   * @returns {Object}
+   */
+  this.disableDirectives = function (directives) {
+    directives = [].concat(directives);
+    var directiveFn = function directiveFn($provide) {
+      angular.forEach(directives, function (directive) {
+        $provide.factory(directive + 'Directive', function() { return {}; });
+      });
+    };
+
+    this.moduleFns.push(directiveFn);
+
+    return this;
+  };
+
+  /**
+   * Registers a controller to be mocked. This is useful for view specs where the template contains an `ng-controller`.
+   * The view's `$scope` is not set by the controller anymore, but you have to set the `$scope` manually.
+   *
+   * @param {string} controllerName
+   * @returns {Object}
+   */
+  this.mockController = function mockController(controllerName) {
+    var controllerFn = function ($controllerProvider) {
+      $controllerProvider.register(controllerName, noop);
+    };
+
+    this.moduleFns.push(controllerFn);
+
+    return this;
+  };
+
+  /**
+   * Executes the module config functions.
+   *
+   * @returns result of the angular.mocks.module function
+   */
+  this.go = function go() {
+    var moduleResult = module.apply(this, this.moduleFns);
+    inject();
+    return moduleResult;
+  };
+
+  /**
+   * Replace templates that are loaded via ng-include with a single div that contains the template name.
+   *
+   * @param {string|string[]|Object|Object[]} templates
+   * @returns {Object}
+   */
+  this.mockTemplates = function mockTemplates(templates) {
+    var $templateCache = injectEnv('$templateCache');
+    templates = [].concat(templates);
+    angular.forEach(templates, function (templateConfig) {
+      var path;
+      var template;
+      if (angular.isString(templateConfig)) {
+        path = templateConfig;
+        template = '<div>This is a mock for ' + path + '</div>';
+      } else {
+        angular.forEach(templateConfig, function(template, path) {
+          return;
+        });
+      }
+      $templateCache.put(path, template);
+    });
+
+    return this;
+  };
+
+  /*
+   * Define return values or fake callback methods for methods of multiple mock
+   *
+   * Usage:
+   * mox().setupResults({
+   *   MockResource1: {
+   *     get: mockResult
+   *   },
+   *   MockResource2: {
+   *     query: fakeFunction
+   *   },
+   *   MockFilter: 'returnValueString' // object as return value not allowed!
+   * });
+   *
+   * @return {Object}
+   */
+  this.setupResults = function setupResults(config) {
+    angular.forEach(config, function (mockConfig, mockName) {
+      var mock = mox.get[mockName];
+
+      function setSpyResult(spy, returnValue) {
+        if (typeof returnValue == 'function' || false) {
+          spy.andCallFake(returnValue);
+        } else {
+          spy.andReturn(returnValue);
+        }
+      }
+
+      // Iterate over methods of mock
+      if (typeof mockConfig === 'object' && mockConfig.constructor === Object) {
+        angular.forEach(mockConfig, function (returnValue, method) {
+          if (!(method in mock)) {
+            throw new Error('Could not mock return value. No method ' + method + ' created in mock for ' + mockName);
+          }
+          setSpyResult(mock[method], returnValue);
+        });
+      } else { // the mock itmox is a spy
+        setSpyResult(mock, mockConfig);
+      }
+    });
+
+    return this;
+  };
+
+  /**
+   * Registers a mock and save it to the cache.
+   * This method usually is used when defining a custom mock factory function or when manually creating a mock
+   *
+   * @param $provide
+   * @param {string} mockName
+   * @param {Object} mock
+   * @returns {*}
+   */
+  this.save = function saveMock($provide, mockName, mock) {
+    $provide.value(mockName, mock);
+    mox.get[mockName] = mock;
     return mock;
   };
-};
 
-/**
- * Creates a mock for angular $resources which can be initialized in the spec with a $provide
- * to immediately inject it into the current module. The instance functions ($get, etc) are added to the mock
- * as well, so this mock is used both as a "class" $resource and instance $resource.
- *
- * Usage example:
- *
- * // in MockServices
- * // ...
- * FooResource: createResourceMock('FooResource')
- * // ...
- *
- * // in a spec:
- *
- * fooResource = mox().module('...').register('FooResource').go();
- */
-mox.createResourceMock = function createResourceMock(mockName, optionalMethods) {
-  var defaultMethods = ['get', 'query', 'save', 'update', 'remove', 'delete'];
-  var allStaticMethods = _.union(defaultMethods, optionalMethods || []);
-  var allInstanceMethods = [];
-  angular.forEach(allStaticMethods, function (method) {
-    allInstanceMethods.push('$' + method);
-  });
-  return function ($provide) {
-    var mock = jasmine.createSpyObj(mockName, _.union(allStaticMethods, allInstanceMethods, ['constructor']));
+  /**
+   * Simple wrapper around jasmine.createSpyObj, ensures a new instance is returned for every call
+   *
+   * @returns {Object}
+   */
+  this.createMock = function createMock(mockName, mockedMethods) {
 
-    // Create a mocked constructor that returns the mock itself plus the data that is provided as argument
-    mock.constructor.andCallFake(function (data) {
-      var constructor = angular.copy(mock);
-      angular.extend(constructor, data);
-    });
+    return function ($provide, nameOverride) {
+      var mock = (mockedMethods) ? jasmine.createSpyObj(mockName, mockedMethods) : jasmine.createSpy(mockName);
+      if ($provide) {
+        mox.save($provide, nameOverride ? nameOverride : mockName, mock);
+      }
 
-    angular.extend(mock.constructor, mock);
-
-    if ($provide) {
-      $provide.value(mockName, mock.constructor);
-      mox.get[mockName] = mock;
-    }
-
-    return mock.constructor;
+      return mock;
+    };
   };
-};
+
+  /**
+   * Creates a mock for angular $resources which can be initialized in the spec with a $provide
+   * to immediately inject it into the current module. The instance functions ($get, etc) are added to the mock
+   * as well, so this mock is used both as a "class" $resource and instance $resource.
+   *
+   * Usage example:
+   *
+   * // in MockServices
+   * // ...
+   * FooResource: createResourceMock('FooResource')
+   * // ...
+   *
+   * // in a spec:
+   *
+   * fooResource = mox().module('...').register('FooResource').go();
+   */
+  this.createResourceMock = function createResourceMock(mockName, optionalMethods) {
+    var allMethods = {};
+    optionalMethods = ['get', 'nogwat'];
+    function addToMethodList(methodName) {
+      allMethods[methodName] = methodName;
+      allMethods['$' + methodName] = '$' + methodName;
+    }
+    angular.forEach(['get', 'query', 'save', 'update', 'remove', 'delete'].concat(optionalMethods), addToMethodList);
+    allMethods['constructor'] = 'constructor';
+    return function ($provide) {
+      var mock = jasmine.createSpyObj(mockName, Object.keys(allMethods));
+
+      // Create a mocked constructor that returns the mock itmox plus the data that is provided as argument
+      mock.constructor.andCallFake(function (data) {
+        var constructor = angular.copy(mock);
+        angular.extend(constructor, data);
+      });
+
+      angular.extend(mock.constructor, mock);
+
+      if ($provide) {
+        $provide.value(mockName, mock.constructor);
+        mox.get[mockName] = mock;
+      }
+
+      return mock.constructor;
+    };
+  };
+
+  return this;
+}
+
+angular.module('mox', [])
+  .service('Mox', MoxBuilder);
+
+window.mox = angular.injector(['mox']).get('Mox');
 
 /*******************************
  * Helper functions *
