@@ -19,7 +19,7 @@ Copy moxConfig.js to your project test folder. Put mox.js and moxConfig.js in yo
     
       beforeEach(function() {
       
-        mox()
+        mox
           .module(
             'myApp',
             function ($provide) {
@@ -46,7 +46,7 @@ Copy moxConfig.js to your project test folder. Put mox.js and moxConfig.js in yo
           ])
           .go();
           
-        mox()
+        mox
           .setupResults({
             fooService: {
               getBars: ['barData1', 'barData2'],
@@ -79,39 +79,39 @@ Copy moxConfig.js to your project test folder. Put mox.js and moxConfig.js in yo
       
 ## Mox registration methods
 
-### mox().module()
+### mox.module()
 
 Sets up the module, just like [module()](https://docs.angularjs.org/api/ngMock/function/angular.mock.module) does.
 Pass module names, config functions or objects. The passed arguments are executed when `go()` is called.
 
 Returns the Mox instance to make chaining possible.
 
-### mox().mockServices()
+### mox.mockServices()
 
 Registers services to be mocked. This can be an Angular factory, service and/or filter. The mock factory function needs to be
 defined in the moxConfig.js file.
 This function tries create a resource mock or normal mock depending on the mock name prefix (`Filter` or `Resource`).
 The following mocks are created:
 
-* when mock factory exists in `mockConfig.js`: jasmine spy object with spy methods as defined in mock (factory function is executed)
+* when mock factory exists in `moxConfig.js`: jasmine spy object with spy methods as defined in mock (factory function is executed)
 * when name ends with `Filter`: jasmine spy
 * when name ends with `Resource`: jasmine spy object with spy methods `get`, `query`, `save`, `remove`, `delete`,
   `$get`, `$query`, `$save`, `$remove`, `$delete`
 
 One service:
 
-    mox().mockServices('FooResource');
+    mox.mockServices('FooResource');
 
 Multiple services:
 
-    mox().mockServices([
+    mox.mockServices([
        'fooResource',
        'barService'
     ])
 
 Returns the Mox instance to make chaining possible.
 
-### mox().mockDirectives()
+### mox.mockDirectives()
 
 Register directive(s) to be mocked.
 
@@ -123,23 +123,23 @@ Accepts 3 types of input:
 
 Returns the Mox instance to make chaining possible.
 
-### mox().disableDirectives()
+### mox.disableDirectives()
 
 "Disables" the given list of directives, not just mocking them.
 Accepts directive name or array with directive names to disable.
 
 Returns the Mox instance to make chaining possible.
 
-### mox().mockController()
+### mox.mockController()
 
 Registers a controller to be mocked. This is useful for view specs where the template contains an `ng-controller`.
 The view's `$scope` is not set by the controller anymore, but you have to set the `$scope` manually.
 
-    mox().mockController('FooController');
+    mox.mockController('FooController');
 
 Returns the Mox instance to make chaining possible.
 
-### mox().go()
+### mox.go()
 
 Executes all registered stuff so that the actual mocking is done. If you forget to call `go()`, nothing will be mocked.
 The real services will be overwritten by mocks via `$provide.value`, so when you inject `FooService`, you get the mocked service, including
@@ -149,16 +149,16 @@ As bonus, the mocks are added to the `mox.get` object, so that you can access mo
 
 Returns the result of angular.mocks.module`, so that the call can passed as argument to `beforeEach`. So chaining is not possible after `go()`.
 
-    beforeEach(mox().module('myApp').go());
+    beforeEach(mox.module('myApp').go());
 
 ## Mox configuration methods
 
-### mox().setupResults()
+### mox.setupResults()
 
 Pass an object with a configuration for the spy functions of the already registered mocks.
 If the value is a function, it will be set using Jasmine's `andCallFake()`, otherwise it uses `andReturn`
 
-    mox().setupResults({
+    mox.setupResults({
       fooService: {
         getBars: ['barData1', 'barData2'],
         getTranslation: function (key) {
@@ -168,7 +168,7 @@ If the value is a function, it will be set using Jasmine's `andCallFake()`, othe
       barFilter: 'mock filter result' // Object not allowed as return value
     });
   
-### mox().mockTemplates()
+### mox.mockTemplates()
 
 Replaces templates with a mock template: `<div>This is a mock for views/templatename.html</div>` or a custom template.
 This is very useful when you want to mock an `ng-include` in your view spec. The mocked templates will be tested in a
@@ -177,18 +177,18 @@ separate view spec.
 Note that this method is not called in the chain that ends with `go()`. This is because `mockTemplates` needs the injector
 to already be initialized, which is done after calling `go()`.
 
-    mox().mockTemplates([
+    mox.mockTemplates([
       'scripts/views/templatename.html',
       { 'scripts/views/anotherTemplate.html': '<tr><td></td></tr>' }
     ])
     
 Or just one template:
 
-    mox().mockTemplates('scripts/views/templatename.html');
+    mox.mockTemplates('scripts/views/templatename.html');
     
 Or:
 
-    mox().mockTemplate({ 'scripts/views/anotherTemplate.html': '<tr><td></td></tr>' });
+    mox.mockTemplate({ 'scripts/views/anotherTemplate.html': '<tr><td></td></tr>' });
     
 ## Static methods/properties
 
@@ -209,7 +209,7 @@ When a mock is registered, you can get the mock without injecting it.
     
 ### mox.factories
 
-Call a mock factory function manually without chaining via `mox()`.
+Call a mock factory function manually without chaining via `mox`.
 The factory functions needs to be defined in moxConfig.
     
     mox.factories.FooServices($provide);
@@ -240,8 +240,6 @@ Finally this framework contains a lot of utility functions:
 
 * `createScope`: Creates a new $rootScope child. The optional passed argument is an object 
 * `createController(controllerName)`: Creates and initialized a controller
-* `mockDate`: Mock the current date. Specs that use momentjs or Date depend on the current date will introduce
-unreliable behaviour when the current date is not mocked.
 * `getMockData(fileName)`: Asynchronously loads the contents of a JSON file. The argument is a path without '.json'.
 
 ### Compile shortcuts
@@ -300,14 +298,13 @@ Extends the element with its children. The children are accessible via the provi
    
 ## Wishlist
 
-* Make a clear distinction between registration and configuration phase, to prevent accidental calls like this:
+* Make all functions chainable in one go, for example:
 
-    mox().mockTemplates().go();
+    mox.mockDirectives('fooResource').setupResults(...).go();
     
 * Throw readable exceptions when trying to call one of the registration functions when the injector is already initialized (after calling `go()`).
 * Do not use moxConfig for spy objects with some spy functions. I prefer to somehow inspect the currently registered service to mock all its methods.
 * Get rid of the detection mechanism for filters and resources. Most filter names do not end with `Filter`, as with the resources.
-* Make arguments in mock configuration not nested objects, but use a dot notation key to navigate to the spy, eg. `{ fooService.barMethod: data }`
 
 ## Contributors
 

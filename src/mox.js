@@ -170,7 +170,7 @@ function MoxBuilder() {
    * Define return values or fake callback methods for methods of multiple mock
    *
    * Usage:
-   * mox().setupResults({
+   * mox.setupResults({
    *   MockResource1: {
    *     get: mockResult
    *   },
@@ -256,7 +256,7 @@ function MoxBuilder() {
    *
    * // in a spec:
    *
-   * fooResource = mox().module('...').register('FooResource').go();
+   * fooResource = mox.module('...').register('FooResource').go();
    */
   this.createResourceMock = function createResourceMock(mockName, optionalMethods) {
     var allMethods = {};
