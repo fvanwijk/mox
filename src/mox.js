@@ -36,11 +36,12 @@ function MoxBuilder() {
 
     var registerFn = function ($provide) {
       angular.forEach(mockNames, function (mockName) {
-        var mockArgs = [$provide];
-
         if (angular.isArray(mockName)) {
-          var mockArgs = angular.copy(mockName).concat(mockArgs);
-          mockName = mockArgs.pop();
+          var mockArgs = angular.copy(mockName);
+          mockName = mockArgs.shift();
+          mockArgs.unshift($provide);
+        } else {
+          var mockArgs = [$provide];
         }
 
         if (mockName in mox.factories) {
@@ -155,7 +156,8 @@ function MoxBuilder() {
         template = '<div>This is a mock for ' + path + '</div>';
       } else {
         angular.forEach(templateConfig, function(template, path) {
-          return;
+          template = val;
+          path = key;
         });
       }
       $templateCache.put(path, template);
@@ -258,7 +260,6 @@ function MoxBuilder() {
    */
   this.createResourceMock = function createResourceMock(mockName, optionalMethods) {
     var allMethods = {};
-    optionalMethods = ['get', 'nogwat'];
     function addToMethodList(methodName) {
       allMethods[methodName] = methodName;
       allMethods['$' + methodName] = '$' + methodName;
@@ -270,8 +271,7 @@ function MoxBuilder() {
 
       // Create a mocked constructor that returns the mock itmox plus the data that is provided as argument
       mock.constructor.andCallFake(function (data) {
-        var constructor = angular.copy(mock);
-        angular.extend(constructor, data);
+        return angular.extend({}, mock, data);
       });
 
       angular.extend(mock.constructor, mock);
@@ -542,7 +542,7 @@ function extendElement(element) {
       if (dataBinding) {
         var bindingName = dataBinding.exp || dataBinding[0].exp || dataBinding;
         if (bindingName.indexOf(binding) !== -1) {
-          matches.push(bindings[i]);
+          matches.push(bindingElem);
         }
       }
     });
