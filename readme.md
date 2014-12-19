@@ -1,15 +1,15 @@
-# Mox: Mocking framework for AngularJS apps
+# Mox: Mocking utility library for AngularJS apps
 
 When it comes to unit tests, normally a lot of boilerplate code is written to set up the mocks. This library consists of
 some utility functions to set up mocks very fast and have total control of the scope of your tests.
 
 ## Usage
-Put mox.js and moxConfig.js in your karma.conf.js file list, is this order:
+Copy moxConfig.js to your project test folder. Put mox.js and moxConfig.js in your karma.conf.js file list, is this order:
 
     files: [
     ...
       'bower_components/mox/mox.js',
-      'bower_components/mox/moxConfig.js',
+      'test/moxConfig.js',
     ...
     ],
     

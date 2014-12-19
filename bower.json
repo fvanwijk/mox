@@ -5,7 +5,7 @@
   "authors": [
     "Frank van Wijk <fvanwijk@xebia.com>"
   ],
-  "description": "Mocking framework for AngularJS apps",
+  "description": "Mocking utility library for AngularJS apps",
   "keywords": [
     "angularjs",
     "mocks",
@@ -13,13 +13,11 @@
     "karma"
   ],
   "license": "MIT",
-  "homepage": "http://www.frankvanwijk.nl",
+  "homepage": "http://www.frankvanwijk.nl/mox",
   "ignore": [
     "**/.*",
     "node_modules",
-    "bower_components",
-    "test",
-    "tests"
+    "bower_components"
   ],
   "dependencies": {
     "angular-mocks": "1.2.21"
