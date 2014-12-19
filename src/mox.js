@@ -155,7 +155,7 @@ function MoxBuilder() {
         path = templateConfig;
         template = '<div>This is a mock for ' + path + '</div>';
       } else {
-        angular.forEach(templateConfig, function(template, path) {
+        angular.forEach(templateConfig, function(val, key) {
           template = val;
           path = key;
         });
