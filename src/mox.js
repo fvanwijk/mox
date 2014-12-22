@@ -36,9 +36,26 @@ function MoxBuilder() {
    * @param {string|string[]} mockNames
    */
   this.mockServices = function MockServices(mockNames) {
+    function getMethodNames(obj) {
+      if (angular.isFunction(obj) && obj.name !== 'Resource') {
+        return;
+      }
+      var methodNames = [];
+
+      // TODO: recursively replace nested methods with nested spies
+      angular.forEach(obj, function (method, methodName) {
+        if (angular.isFunction(method)) {
+          methodNames.push(methodName);
+        }
+      });
+      return methodNames;
+    }
+
     mockNames = [].concat(mockNames);
 
     moduleFns.push(function mockServicesFn($provide) {
+      var injector = angular.injector(['ng', 'ngMock', moduleName]);
+
       angular.forEach(mockNames, function (mockName) {
         if (angular.isArray(mockName)) {
           var mockArgs = angular.copy(mockName);
@@ -50,12 +67,13 @@ function MoxBuilder() {
 
         if (mockName in mox.factories) {
           mox.factories[mockName].apply(this, mockArgs);
-        } else if (mockName.indexOf('Resource', mockName.length - 8) !== -1) {
-          mox.createResourceMock(mockName)($provide);
-        } else if (mockName.indexOf('Filter', mockName.length - 6) !== -1) {
-          mox.createMock(mockName)($provide);
         } else {
-          throw new Error('Mock ' + mockName + ' does not exist. Is it in MoxConfig with the correct casing?');
+          var service = injector.get(mockName);
+          if (service.name === 'Resource') {
+            mox.createResourceMock(mockName, getMethodNames(service))($provide);
+          } else {
+            mox.createMock(mockName, getMethodNames(service))($provide);
+          }
         }
       });
     });
@@ -268,13 +286,13 @@ function MoxBuilder() {
    *
    * fooResource = mox.module('...').register('FooResource').go();
    */
-  this.createResourceMock = function createResourceMock(mockName, optionalMethods) {
+  this.createResourceMock = function createResourceMock(mockName, methodNames) {
     var allMethods = {};
     function addToMethodList(methodName) {
       allMethods[methodName] = methodName;
       allMethods['$' + methodName] = '$' + methodName;
     }
-    angular.forEach(['get', 'query', 'save', 'update', 'remove', 'delete'].concat(optionalMethods), addToMethodList);
+    angular.forEach(methodNames, addToMethodList);
     allMethods['constructor'] = 'constructor';
     return function ($provide) {
       var mock = jasmine.createSpyObj(mockName, Object.keys(allMethods));
