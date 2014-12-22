@@ -34,7 +34,7 @@ function MoxBuilder() {
   this.mockServices = function MockServices(mockNames) {
     mockNames = [].concat(mockNames);
 
-    var registerFn = function ($provide) {
+    this.moduleFns.push(function mockServicesFn($provide) {
       angular.forEach(mockNames, function (mockName) {
         if (angular.isArray(mockName)) {
           var mockArgs = angular.copy(mockName);
@@ -54,9 +54,7 @@ function MoxBuilder() {
           throw new Error('Mock ' + mockName + ' does not exist. Is it in MoxConfig with the correct casing?');
         }
       });
-    };
-
-    this.moduleFns.push(registerFn);
+    });
 
     return this;
   };
@@ -69,13 +67,14 @@ function MoxBuilder() {
    * 2. a directive factory object, for you won mock implementation (name property is required)
    * 3. an array of directive names (see 1) or objects (see 2)
    *
-   * @param {string[]|string|Object[]|Object} directives Array of directives
+   * @param {string[]|string|Object[]|Object} directiveNames Array of directiveNames
    * @returns {Object}
    */
-  this.mockDirectives = function mockDirectives(directives) {
-    directives = [].concat(directives);
-    var directiveFn = function directiveFn($provide) {
-      angular.forEach(directives, function (directive) {
+  this.mockDirectives = function mockDirectives(directiveNames) {
+    directiveNames = [].concat(directiveNames);
+
+    this.moduleFns.push(function directiveFn($provide) {
+      angular.forEach(directiveNames, function (directive) {
         var mock = angular.isString(directive) ? { name: directive } : directive;
         mock = angular.extend({
           priority: 0,
@@ -86,9 +85,7 @@ function MoxBuilder() {
           return [mock];
         });
       });
-    };
-
-    this.moduleFns.push(directiveFn);
+    });
 
     return this;
   };
@@ -98,15 +95,14 @@ function MoxBuilder() {
    * @param {string[]|string} directives directives to disable
    * @returns {Object}
    */
-  this.disableDirectives = function (directives) {
-    directives = [].concat(directives);
-    var directiveFn = function directiveFn($provide) {
-      angular.forEach(directives, function (directive) {
-        $provide.factory(directive + 'Directive', function() { return {}; });
-      });
-    };
+  this.disableDirectives = function (directiveNames) {
+    directiveNames = [].concat(directiveNames);
 
-    this.moduleFns.push(directiveFn);
+    this.moduleFns.push(function directiveFn($provide) {
+      angular.forEach(directiveNames, function (directiveName) {
+        $provide.factory(directiveName + 'Directive', function() { return {}; });
+      });
+    });
 
     return this;
   };
@@ -119,11 +115,9 @@ function MoxBuilder() {
    * @returns {Object}
    */
   this.mockController = function mockController(controllerName) {
-    var controllerFn = function ($controllerProvider) {
+    this.moduleFns.push(function ($controllerProvider) {
       $controllerProvider.register(controllerName, noop);
-    };
-
-    this.moduleFns.push(controllerFn);
+    });
 
     return this;
   };
