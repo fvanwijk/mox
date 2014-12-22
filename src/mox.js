@@ -8,10 +8,13 @@ var moxConfig = {};
  */
 function MoxBuilder() {
 
-  this.moduleFns = [];
+  var
+    moduleName,
+    moduleFns = [],
+    postInjectFns = [];
+
   this.factories = moxConfig; // Factory functions for creating mocks
   this.get = {}; // Cache for mocked things
-
 
   /**
    * Saves modules or module config functions to be passed to angular.mocks.module when .go() is called.
@@ -19,7 +22,8 @@ function MoxBuilder() {
    * @returns {Object}
    */
   this.module = function module() {
-    this.moduleFns = Array.prototype.slice.call(arguments, 0);
+    moduleName = arguments[0];
+    moduleFns = Array.prototype.slice.call(arguments, 0).concat(moduleFns);
 
     return this;
   };
@@ -34,7 +38,7 @@ function MoxBuilder() {
   this.mockServices = function MockServices(mockNames) {
     mockNames = [].concat(mockNames);
 
-    this.moduleFns.push(function mockServicesFn($provide) {
+    moduleFns.push(function mockServicesFn($provide) {
       angular.forEach(mockNames, function (mockName) {
         if (angular.isArray(mockName)) {
           var mockArgs = angular.copy(mockName);
@@ -73,7 +77,7 @@ function MoxBuilder() {
   this.mockDirectives = function mockDirectives(directiveNames) {
     directiveNames = [].concat(directiveNames);
 
-    this.moduleFns.push(function directiveFn($provide) {
+    moduleFns.push(function directiveFn($provide) {
       angular.forEach(directiveNames, function (directive) {
         var mock = angular.isString(directive) ? { name: directive } : directive;
         mock = angular.extend({
@@ -98,7 +102,7 @@ function MoxBuilder() {
   this.disableDirectives = function (directiveNames) {
     directiveNames = [].concat(directiveNames);
 
-    this.moduleFns.push(function directiveFn($provide) {
+    moduleFns.push(function directiveFn($provide) {
       angular.forEach(directiveNames, function (directiveName) {
         $provide.factory(directiveName + 'Directive', function() { return {}; });
       });
@@ -115,22 +119,11 @@ function MoxBuilder() {
    * @returns {Object}
    */
   this.mockController = function mockController(controllerName) {
-    this.moduleFns.push(function ($controllerProvider) {
+    moduleFns.push(function ($controllerProvider) {
       $controllerProvider.register(controllerName, noop);
     });
 
     return this;
-  };
-
-  /**
-   * Executes the module config functions.
-   *
-   * @returns result of the angular.mocks.module function
-   */
-  this.go = function go() {
-    var moduleResult = module.apply(this, this.moduleFns);
-    inject();
-    return moduleResult;
   };
 
   /**
@@ -140,68 +133,91 @@ function MoxBuilder() {
    * @returns {Object}
    */
   this.mockTemplates = function mockTemplates(templates) {
-    var $templateCache = injectEnv('$templateCache');
     templates = [].concat(templates);
-    angular.forEach(templates, function (templateConfig) {
-      var path;
-      var template;
-      if (angular.isString(templateConfig)) {
-        path = templateConfig;
-        template = '<div>This is a mock for ' + path + '</div>';
-      } else {
-        angular.forEach(templateConfig, function(val, key) {
-          template = val;
-          path = key;
-        });
-      }
-      $templateCache.put(path, template);
+
+    postInjectFns.push(function () {
+      var $templateCache = injectEnv('$templateCache');
+      angular.forEach(templates, function (templateConfig) {
+        var path;
+        var template;
+        if (angular.isString(templateConfig)) {
+          path = templateConfig;
+          template = '<div>This is a mock for ' + path + '</div>';
+        } else {
+          angular.forEach(templateConfig, function(val, key) {
+            template = val;
+            path = key;
+          });
+        }
+        $templateCache.put(path, template);
+      });
     });
 
     return this;
   };
 
   /*
-   * Define return values or fake callback methods for methods of multiple mock
+   * Define return values or fake callback methods for methods of multiple mocks
    *
    * Usage:
-   * mox.setupResults({
-   *   MockResource1: {
-   *     get: mockResult
-   *   },
-   *   MockResource2: {
-   *     query: fakeFunction
-   *   },
-   *   MockFilter: 'returnValueString' // object as return value not allowed!
+   * mox.setupResults(function() {
+   *   return {
+   *     MockResource1: {
+   *       get: mockResult
+   *     },
+   *     MockResource2: {
+   *       query: fakeFunction
+   *     },
+   *     MockFilter: 'returnValueString' // object as return value not allowed!
+   *   }
    * });
    *
    * @return {Object}
    */
-  this.setupResults = function setupResults(config) {
-    angular.forEach(config, function (mockConfig, mockName) {
-      var mock = mox.get[mockName];
-
-      function setSpyResult(spy, returnValue) {
-        if (typeof returnValue == 'function' || false) {
-          spy.andCallFake(returnValue);
+  this.setupResults = function setupResults(configFn) {
+    postInjectFns.push(function setupResultsFn() {
+      var config = configFn();
+      angular.forEach(config, function (mockConfig, mockName) {
+        if (mockName in mox.get) {
+          var mock = mox.get[mockName];
         } else {
-          spy.andReturn(returnValue);
+          throw new Error(mockName + ' is not in mox.get');
         }
-      }
 
-      // Iterate over methods of mock
-      if (typeof mockConfig === 'object' && mockConfig.constructor === Object) {
-        angular.forEach(mockConfig, function (returnValue, method) {
-          if (!(method in mock)) {
-            throw new Error('Could not mock return value. No method ' + method + ' created in mock for ' + mockName);
+        function setSpyResult(spy, returnValue) {
+          if (typeof returnValue == 'function' || false) {
+            spy.andCallFake(returnValue);
+          } else {
+            spy.andReturn(returnValue);
           }
-          setSpyResult(mock[method], returnValue);
-        });
-      } else { // the mock itmox is a spy
-        setSpyResult(mock, mockConfig);
-      }
+        }
+
+        // Iterate over methods of mock
+        if (typeof mockConfig === 'object' && mockConfig.constructor === Object) {
+          angular.forEach(mockConfig, function (returnValue, method) {
+            if (!(method in mock)) {
+              throw new Error('Could not mock return value. No method ' + method + ' created in mock for ' + mockName);
+            }
+            setSpyResult(mock[method], returnValue);
+          });
+        } else { // the mock itself is a spy
+          setSpyResult(mock, mockConfig);
+        }
+      });
     });
 
     return this;
+  };
+
+  /**
+   * Executes the module config and post inject functions.
+   *
+   * @returns result of the angular.mocks.module function
+   */
+  this.go = function go() {
+    angular.mock.module.apply(this, moduleFns);
+    angular.mock.inject(); // to make sure that moduleFns had ran
+    postInjectFns.forEach(function (cb) { cb(); });
   };
 
   /**
@@ -302,8 +318,10 @@ window.mox = angular.injector(['mox']).get('Mox');
 function injectEnv(name) {
   // Lazy loading of inject environment. Not possible when in config phase, because 'inject' invokes the module function!
   if (jasmine.getEnv().currentSpec.$injector === undefined) {
+    console.warn('Injector not yet initialized');
     inject();
   }
+
   return jasmine.getEnv().currentSpec.$injector.get(name);
 }
 
