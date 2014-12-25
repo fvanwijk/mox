@@ -10,8 +10,29 @@ function MoxBuilder() {
 
   var
     moduleName,
-    moduleFns = [],
+    moduleFns,
+    postInjectFns;
+
+  function execute() {
+    var moduleResult;
+    if (moduleFns.length) {
+      moduleResult = angular.mock.module.apply(this, moduleFns);
+      angular.mock.inject(); // to make sure that moduleFns had ran
+    }
+    postInjectFns.forEach(function (cb) { cb(); });
+    return moduleResult;
+  }
+
+  /**
+   * Reset the queues of moduleFns and postInejctFns so that next mox usage starts with a fresh new setup
+   */
+  function cleanUp() {
+    moduleName = undefined;
+    moduleFns = [];
     postInjectFns = [];
+  }
+
+  cleanUp();
 
   this.factories = moxConfig; // Factory functions for creating mocks
   this.get = {}; // Cache for mocked things
@@ -95,7 +116,7 @@ function MoxBuilder() {
   this.mockDirectives = function mockDirectives(directiveNames) {
     directiveNames = [].concat(directiveNames);
 
-    moduleFns.push(function directiveFn($provide) {
+    moduleFns.push(function mockDirectivesFn($provide) {
       angular.forEach(directiveNames, function (directive) {
         var mock = angular.isString(directive) ? { name: directive } : directive;
         mock = angular.extend({
@@ -120,7 +141,7 @@ function MoxBuilder() {
   this.disableDirectives = function (directiveNames) {
     directiveNames = [].concat(directiveNames);
 
-    moduleFns.push(function directiveFn($provide) {
+    moduleFns.push(function disableDirectivesFn($provide) {
       angular.forEach(directiveNames, function (directiveName) {
         $provide.factory(directiveName + 'Directive', function() { return {}; });
       });
@@ -230,12 +251,13 @@ function MoxBuilder() {
   /**
    * Executes the module config and post inject functions.
    *
-   * @returns result of the angular.mocks.module function
+   * @returns result of the angular.mock.module function
    */
   this.go = function go() {
-    angular.mock.module.apply(this, moduleFns);
-    angular.mock.inject(); // to make sure that moduleFns had ran
-    postInjectFns.forEach(function (cb) { cb(); });
+    var moduleResult = execute();
+    cleanUp();
+
+    return moduleResult;
   };
 
   /**
@@ -334,9 +356,8 @@ window.mox = angular.injector(['mox']).get('Mox');
  * @returns service
  */
 function injectEnv(name) {
-  // Lazy loading of inject environment. Not possible when in config phase, because 'inject' invokes the module function!
+  // Lazy loading of inject environment
   if (jasmine.getEnv().currentSpec.$injector === undefined) {
-    console.warn('Injector not yet initialized');
     inject();
   }
 
@@ -412,6 +433,11 @@ function mockDate(dateString) {
   });
 }
 
+/**
+ * Depends on jasmine-jquery
+ * @param path
+ * @returns {*}
+ */
 function getMockData(path) {
   return copy(getJSONFixture(path));
 }
