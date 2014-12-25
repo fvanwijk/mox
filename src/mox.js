@@ -38,7 +38,7 @@ function MoxBuilder() {
   this.get = {}; // Cache for mocked things
 
   /**
-   * Saves modules or module config functions to be passed to angular.mocks.module when .go() is called.
+   * Saves modules or module config functions to be passed to angular.mocks.module when .run() is called.
    *
    * @returns {Object}
    */
@@ -253,7 +253,7 @@ function MoxBuilder() {
    *
    * @returns result of the angular.mock.module function
    */
-  this.go = function go() {
+  this.run = function run() {
     var moduleResult = execute();
     cleanUp();
 
@@ -306,7 +306,7 @@ function MoxBuilder() {
    *
    * // in a spec:
    *
-   * fooResource = mox.module('...').register('FooResource').go();
+   * fooResource = mox.module('...').register('FooResource').run();
    */
   this.createResourceMock = function createResourceMock(mockName, methodNames) {
     var allMethods = {};

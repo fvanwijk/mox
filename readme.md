@@ -44,7 +44,7 @@ Copy moxConfig.js to your project test folder. Put mox.js and moxConfig.js in yo
           .disableDirectives([
             'fooDirective'
           ])
-          .go();
+          .run();
           
         mox
           .setupResults({
@@ -82,7 +82,7 @@ Copy moxConfig.js to your project test folder. Put mox.js and moxConfig.js in yo
 ### mox.module()
 
 Sets up the module, just like [module()](https://docs.angularjs.org/api/ngMock/function/angular.mock.module) does.
-Pass module names, config functions or objects. The passed arguments are executed when `go()` is called.
+Pass module names, config functions or objects. The passed arguments are executed when `run()` is called.
 
 Returns the Mox instance to make chaining possible.
 
@@ -139,17 +139,17 @@ The view's `$scope` is not set by the controller anymore, but you have to set th
 
 Returns the Mox instance to make chaining possible.
 
-### mox.go()
+### mox.run()
 
-Executes all registered stuff so that the actual mocking is done. If you forget to call `go()`, nothing will be mocked.
+Executes all registered stuff so that the actual mocking is done. If you forget to call `run()`, nothing will be mocked.
 The real services will be overwritten by mocks via `$provide.value`, so when you inject `FooService`, you get the mocked service, including
 spies on all methods.
 
 As bonus, the mocks are added to the `mox.get` object, so that you can access mocks easily in your specs without an ugly `inject(function() {})` wrapper.
 
-Returns the result of angular.mocks.module`, so that the call can passed as argument to `beforeEach`. So chaining is not possible after `go()`.
+Returns the result of angular.mocks.module`, so that the call can passed as argument to `beforeEach`. So chaining is not possible after `run()`.
 
-    beforeEach(mox.module('myApp').go());
+    beforeEach(mox.module('myApp').run());
 
 ## Mox configuration methods
 
@@ -174,8 +174,8 @@ Replaces templates with a mock template: `<div>This is a mock for views/template
 This is very useful when you want to mock an `ng-include` in your view spec. The mocked templates will be tested in a
 separate view spec.
 
-Note that this method is not called in the chain that ends with `go()`. This is because `mockTemplates` needs the injector
-to already be initialized, which is done after calling `go()`.
+Note that this method is not called in the chain that ends with `run()`. This is because `mockTemplates` needs the injector
+to already be initialized, which is done after calling `run()`.
 
     mox.mockTemplates([
       'scripts/views/templatename.html',
@@ -294,17 +294,6 @@ Extends the element with its children. The children are accessible via the provi
 
      var element = extendedElementWithChildren(rootElement.find('table thead tr'), ['name','age']);
      element.name.text() // Your name
-
-   
-## Wishlist
-
-* Make all functions chainable in one go, for example:
-
-    mox.mockDirectives('fooResource').setupResults(...).go();
-    
-* Throw readable exceptions when trying to call one of the registration functions when the injector is already initialized (after calling `go()`).
-* Do not use moxConfig for spy objects with some spy functions. I prefer to somehow inspect the currently registered service to mock all its methods.
-* Get rid of the detection mechanism for filters and resources. Most filter names do not end with `Filter`, as with the resources.
 
 ## Contributors
 
