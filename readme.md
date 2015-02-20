@@ -3,6 +3,8 @@
 When it comes to unit tests, normally a lot of boilerplate code is written to set up the mocks. This library consists of
 some utility functions to set up mocks very fast and have total control of the scope of your tests.
 
+NB: Sorry, no full Jasmine 2 support yet!
+
 ## Usage
 Copy moxConfig.js to your project test folder. Put mox.js and moxConfig.js in your karma.conf.js file list, is this order:
 
