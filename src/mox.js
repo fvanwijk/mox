@@ -347,6 +347,13 @@ window.mox = angular.injector(['mox']).get('Mox');
  * Helper functions *
  *******************************/
 
+// Save the current spec for later use (Jasmine 2 compatibility)
+var currentSpec;
+beforeEach(function () {
+  currentSpec = this;
+});
+
+
 /**
  * Injects a service.
  * If the injector is not yet initialized, it will be initialized. This has as side effect that the module config
@@ -356,12 +363,10 @@ window.mox = angular.injector(['mox']).get('Mox');
  * @returns service
  */
 function injectEnv(name) {
-  // Lazy loading of inject environment
-  if (jasmine.getEnv().currentSpec.$injector === undefined) {
-    inject();
+  if (!currentSpec.$injector) {
+    throw Error('Sorry, cannot inject ' + name + ' because the injector is not ready yet. Please call mox.run() or inject()');
   }
-
-  return jasmine.getEnv().currentSpec.$injector.get(name);
+  return currentSpec.$injector.get(name);
 }
 
 // use jasmine.successCallback / failureCallback to test .then callbacks and with which arguments
