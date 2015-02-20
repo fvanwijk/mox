@@ -369,14 +369,6 @@ function injectEnv(name) {
   return currentSpec.$injector.get(name);
 }
 
-// use jasmine.successCallback / failureCallback to test .then callbacks and with which arguments
-// they were called. Use 'mostRecentCall.args' to do other stuff with arguments,
-// or use jasmine-stealth's Argument Captors (https://github.com/searls/jasmine-stealth)
-beforeEach(function initHandlerCallbacks() {
-  jasmine.successCallback = jasmine.createSpy('success callback');
-  jasmine.failureCallback = jasmine.createSpy('failure callback');
-});
-
 /**
  * Copies input. When input seems to be JSON data, it is fastcopied.
  *
