@@ -755,7 +755,7 @@ function requestTest() {
 
     promise
       .then(jasmine.successCallback)
-      .except(jasmine.failureCallback);
+      .catch(jasmine.failureCallback);
 
     injectEnv('$httpBackend').flush();
 
