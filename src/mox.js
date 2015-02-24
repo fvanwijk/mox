@@ -225,9 +225,17 @@ function MoxBuilder() {
 
         function setSpyResult(spy, returnValue) {
           if (typeof returnValue == 'function' || false) {
-            spy.andCallFake(returnValue);
+            if (currentSpec.isJasmineV2()) {
+              spy.and.callFake(returnValue);
+            } else {
+              spy.andCallFake(returnValue);
+            }
           } else {
-            spy.andReturn(returnValue);
+            if (currentSpec.isJasmineV2()) {
+              spy.and.returnValue(returnValue);
+            } else {
+              spy.andReturn(returnValue);
+            }
           }
         }
 
@@ -320,9 +328,14 @@ function MoxBuilder() {
       var mock = jasmine.createSpyObj(mockName, Object.keys(allMethods));
 
       // Create a mocked constructor that returns the mock itmox plus the data that is provided as argument
-      mock.constructor.andCallFake(function (data) {
+      var fn = function (data) {
         return angular.extend({}, mock, data);
-      });
+      };
+      if (currentSpec.isJasmineV2()) {
+        mock.constructor.and.callFake(fn);
+      } else {
+        mock.constructor.andCallFake(fn);
+      }
 
       angular.extend(mock.constructor, mock);
 
@@ -350,6 +363,10 @@ window.mox = angular.injector(['mox']).get('Mox');
 // Save the current spec for later use (Jasmine 2 compatibility)
 var currentSpec;
 beforeEach(function () {
+  this.isJasmineV2 = function () {
+    return (jasmine.version && jasmine.version.charAt(0) === "2");
+    //version 1.3 uses this syntax: jasmine.getEnv().versionString()
+  };
   currentSpec = this;
 });
 
