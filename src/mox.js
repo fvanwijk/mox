@@ -103,27 +103,52 @@ function MoxBuilder() {
   };
 
   /**
-   * Register directive(s) to be mocked.
+   * Register directive(s) to be mocked. The mock will be an empty directive with the same isolate scope as the original directive,
+   * so the isolate scope of the directive can be tested:
+   *
+   *   compiledElement.find('[directive-name]').toContainIsolateScope({ key: value });
    *
    * Accepts 3 types of input:
    * 1. a directive name: the same as with an array, but just for one directive
-   * 2. a directive factory object, for you won mock implementation (name property is required)
+   * 2. a directive factory object, for your own mock implementation (name property is required)
    * 3. an array of directive names (see 1) or objects (see 2)
    *
    * @param {string[]|string|Object[]|Object} directiveNames Array of directiveNames
    * @returns {Object}
    */
   this.mockDirectives = function mockDirectives(directiveNames) {
+    function getDDO(directiveName) {
+      var directive;
+      angular.forEach(angular.module(moduleName)._invokeQueue, function (registeredDirective) {
+        if (registeredDirective[2][0] === directiveName) {
+          directive = registeredDirective;
+        }
+      });
+      if (angular.isUndefined(directive)) {
+        throw Error('Trying to mock non-existing directive ' + directiveName);
+      }
+      return directive;
+    }
+
+    function getFactoryFn(ddo) {
+      return ddo[2][1];
+    }
+
     directiveNames = [].concat(directiveNames);
+    var injector = angular.injector(['ng', 'ngMock', moduleName]);
 
     moduleFns.push(function mockDirectivesFn($provide) {
       angular.forEach(directiveNames, function (directive) {
-        var mock = angular.isString(directive) ? { name: directive } : directive;
+        var mock = angular.isString(directive) ? {
+          name: directive,
+          scope: injector.invoke(getFactoryFn(getDDO(directive))).scope
+        } : directive;
+
         mock = angular.extend({
           priority: 0,
-          restrict: 'EAC',
-          template: '<div class="mock-' + mock.name + '">this is a ' + mock.name + '</div>'
+          restrict: 'EAC'
         }, mock);
+
         $provide.factory(mock.name + 'Directive', function factory() {
           return [mock];
         });
