@@ -110,46 +110,37 @@ function MoxBuilder() {
    *
    * Accepts 3 types of input:
    * 1. a directive name: the same as with an array, but just for one directive
-   * 2. a directive factory object, for your own mock implementation (name property is required)
+   * 2. a directive factory object, for your own mock implementation.
+   *   - name property is required
+   *   - link property not supported, use compile instead
+   *   - index, scope, priority and restrict properties are not overwritable
    * 3. an array of directive names (see 1) or objects (see 2)
    *
    * @param {string[]|string|Object[]|Object} directiveNames Array of directiveNames
    * @returns {Object}
    */
   this.mockDirectives = function mockDirectives(directiveNames) {
-    function getDDO(directiveName) {
-      var directive;
-      angular.forEach(angular.module(moduleName)._invokeQueue, function (registeredDirective) {
-        if (registeredDirective[2][0] === directiveName) {
-          directive = registeredDirective;
-        }
-      });
-      if (angular.isUndefined(directive)) {
-        throw Error('Trying to mock non-existing directive ' + directiveName);
-      }
-      return directive;
-    }
-
-    function getFactoryFn(ddo) {
-      return ddo[2][1];
-    }
 
     directiveNames = [].concat(directiveNames);
-    var injector = angular.injector(['ng', 'ngMock', moduleName]);
 
     moduleFns.push(function mockDirectivesFn($provide) {
       angular.forEach(directiveNames, function (directive) {
-        var mock = angular.isString(directive) ? {
-          name: directive,
-          scope: injector.invoke(getFactoryFn(getDDO(directive))).scope
-        } : directive;
+        var mock = angular.isString(directive) ? { name: directive } : directive;
+        /*
+         * Cannot use $compileProvider.directive because that does not override the original directive(s) with this name.
+         * We decorate the original directive so that we can reuse the isolate bindings and other non-mockable DDO properties.
+         */
+        $provide.decorator(mock.name + 'Directive', function ($delegate) {
+          angular.extend(mock, {
+            name: $delegate[0].name,
+            $$isolateBindings: $delegate[0].$$isolateBindings,
+            scope: $delegate[0].scope,
+            index: $delegate[0].index,
+            priority: $delegate[0].priority,
+            restrict: $delegate[0].restrict
+          });
 
-        mock = angular.extend({
-          priority: 0,
-          restrict: 'EAC'
-        }, mock);
-
-        $provide.factory(mock.name + 'Directive', function factory() {
+          // All directives are unregistered and replaced with this mock
           return [mock];
         });
       });
@@ -168,7 +159,7 @@ function MoxBuilder() {
 
     moduleFns.push(function disableDirectivesFn($provide) {
       angular.forEach(directiveNames, function (directiveName) {
-        $provide.factory(directiveName + 'Directive', function() { return {}; });
+        $provide.factory(directiveName + 'Directive', function () { return {}; });
       });
     });
 
