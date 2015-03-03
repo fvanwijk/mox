@@ -120,6 +120,7 @@ function MoxBuilder() {
    * @returns {Object}
    */
   this.mockDirectives = function mockDirectives(directiveNames) {
+    if (!directiveNames) { return this; }
 
     directiveNames = [].concat(directiveNames);
 
@@ -155,6 +156,8 @@ function MoxBuilder() {
    * @returns {Object}
    */
   this.disableDirectives = function (directiveNames) {
+    if (!directiveNames) { return this; }
+
     directiveNames = [].concat(directiveNames);
 
     moduleFns.push(function disableDirectivesFn($provide) {
