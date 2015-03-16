@@ -510,6 +510,7 @@ function noop() {}
 function compileTemplate(template, $scope) {
   var element = injectEnv('$compile')('<div>' + injectEnv('$templateCache').get(template) + '</div')($scope);
   $scope.$digest();
+  currentSpec.element = element;
   return element;
 }
 
