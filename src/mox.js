@@ -452,6 +452,7 @@ function createScope(params) {
   if (params) {
     angular.extend($scope, params);
   }
+  currentSpec.$scope = $scope;
   return $scope;
 }
 
