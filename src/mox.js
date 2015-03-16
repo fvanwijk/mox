@@ -32,6 +32,19 @@ function MoxBuilder() {
     postInjectFns = [];
   }
 
+  function checkDeprecatedArguments (args, type) {
+    if (!args[0]) {
+      throw Error('Please provide arguments');
+    }
+
+    if (angular.isArray(args[0])) {
+      console.warn('Passing ' + type + ' names as array is deprecated. Please pass multiple arguments', args[0]);
+      return args[0];
+    } else {
+      return args;
+    }
+  }
+
   cleanUp();
 
   this.factories = moxConfig; // Factory functions for creating mocks
@@ -54,9 +67,9 @@ function MoxBuilder() {
    * It creates mocks for resources and filters automagically.
    * The created mock is saved to the mox.get object for easy retrieval.
    *
-   * @param {string|string[]} mockNames
+   * @param {...string|string[]} mockName service(s) to mock
    */
-  this.mockServices = function MockServices(mockNames) {
+  this.mockServices = function MockServices(mockName) {
     function getMethodNames(obj) {
       if (angular.isFunction(obj) && obj.name !== 'Resource') {
         return;
@@ -72,7 +85,7 @@ function MoxBuilder() {
       return methodNames;
     }
 
-    mockNames = [].concat(mockNames);
+    var mockNames = checkDeprecatedArguments(arguments, 'service');
 
     moduleFns.push(function mockServicesFn($provide) {
       var injector = angular.injector(['ng', 'ngMock', moduleName]);
@@ -116,13 +129,11 @@ function MoxBuilder() {
    *   - index, scope, priority and restrict properties are not overwritable
    * 3. an array of directive names (see 1) or objects (see 2)
    *
-   * @param {string[]|string|Object[]|Object} directiveNames Array of directiveNames
+   * @param {...string|string[]|...Object|Object[]} directiveName directive(s) to mock
    * @returns {Object}
    */
-  this.mockDirectives = function mockDirectives(directiveNames) {
-    if (!directiveNames) { return this; }
-
-    directiveNames = [].concat(directiveNames);
+  this.mockDirectives = function mockDirectives(directiveName) {
+    var directiveNames = checkDeprecatedArguments(arguments, 'directive');
 
     moduleFns.push(function mockDirectivesFn($provide) {
       angular.forEach(directiveNames, function (directive) {
@@ -152,13 +163,11 @@ function MoxBuilder() {
 
   /*
    * This function "disables" the given list of directives, not just mocking them
-   * @param {string[]|string} directives directives to disable
+   * @param {string[]|string} directiveName directive(s) to disable
    * @returns {Object}
    */
-  this.disableDirectives = function (directiveNames) {
-    if (!directiveNames) { return this; }
-
-    directiveNames = [].concat(directiveNames);
+  this.disableDirectives = function (directiveName) {
+    var directiveNames = checkDeprecatedArguments(arguments, 'directive');
 
     moduleFns.push(function disableDirectivesFn($provide) {
       angular.forEach(directiveNames, function (directiveName) {
@@ -173,12 +182,16 @@ function MoxBuilder() {
    * Registers a controller to be mocked. This is useful for view specs where the template contains an `ng-controller`.
    * The view's `$scope` is not set by the controller anymore, but you have to set the `$scope` manually.
    *
-   * @param {string} controllerName
+   * @param {...string|string[]} controllerName
    * @returns {Object}
    */
-  this.mockController = function mockController(controllerName) {
+  this.mockControllers = function mockControllers(controllerName) {
+    var controllerNames = checkDeprecatedArguments(arguments, 'controller');
+
     moduleFns.push(function ($controllerProvider) {
-      $controllerProvider.register(controllerName, noop);
+      angular.forEach(controllerNames, function (controllerName) {
+        $controllerProvider.register(controllerName, noop);
+      })
     });
 
     return this;
@@ -187,11 +200,11 @@ function MoxBuilder() {
   /**
    * Replace templates that are loaded via ng-include with a single div that contains the template name.
    *
-   * @param {string|string[]|Object|Object[]} templates
+   * @param {...string|string[]|...Object|Object[]} template
    * @returns {Object}
    */
-  this.mockTemplates = function mockTemplates(templates) {
-    templates = [].concat(templates);
+  this.mockTemplates = function mockTemplates(template) {
+    var templates = checkDeprecatedArguments(arguments, 'template');
 
     postInjectFns.push(function () {
       var $templateCache = injectEnv('$templateCache');
