@@ -528,6 +528,7 @@ function compileTemplate(template, $scope) {
 function compileHtml(html, $scope) {
   var element = injectEnv('$compile')(html)($scope);
   $scope.$digest();
+  currentSpec.element = element;
   return element;
 }
 
