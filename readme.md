@@ -132,12 +132,12 @@ Accepts directive name or array with directive names to disable.
 
 Returns the Mox instance to make chaining possible.
 
-### mox.mockController()
+### mox.mockControllers()
 
-Registers a controller to be mocked. This is useful for view specs where the template contains an `ng-controller`.
+Registers controllers to be mocked. This is useful for view specs where the template contains an `ng-controller`.
 The view's `$scope` is not set by the controller anymore, but you have to set the `$scope` manually.
 
-    mox.mockController('FooController');
+    mox.mockControllers('FooController');
 
 Returns the Mox instance to make chaining possible.
 

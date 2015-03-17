@@ -81,7 +81,7 @@ function MoxBuilder() {
     assertDeprecatedArguments(arguments);
 
     var mockNames = arguments;
-    
+
     moduleFns.push(function mockServicesFn($provide) {
       var injector = angular.injector(['ng', 'ngMock', moduleName]);
 
@@ -178,7 +178,7 @@ function MoxBuilder() {
   };
 
   /**
-   * Registers a controller to be mocked. This is useful for view specs where the template contains an `ng-controller`.
+   * Registers controllers to be mocked. This is useful for view specs where the template contains an `ng-controller`.
    * The view's `$scope` is not set by the controller anymore, but you have to set the `$scope` manually.
    *
    * @param {...string|string[]} controllerName
