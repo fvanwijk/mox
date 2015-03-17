@@ -804,31 +804,29 @@ function requestTest() {
     injectEnv('$httpBackend').expect(test._httpMethod, {test: validateUrl}, test._data).respond(test._response);
 
     var response = test._method.apply(this, test._methodArguments);
-    var isResourceResult = !!response.$promise;
     var promise = response.$promise || response;
 
-    promise
-      .then(jasmine.successCallback)
-      .catch(jasmine.failureCallback);
-
-    injectEnv('$httpBackend').flush();
-
-    if (test._expectFail) {
-      expect(jasmine.failureCallback).toHaveBeenCalled();
-    }
-
-    var callback = test._expectFail ? jasmine.failureCallback : jasmine.successCallback;
     if (angular.isFunction(test._expectedResult)) {
-      test._expectedResult(callback.mostRecentCall.args[0]);
+      jasmine.successCallback = jasmine.createSpy('success callback');
+      jasmine.failureCallback = jasmine.createSpy('failure callback');
+
+      promise
+        .then(jasmine.successCallback)
+        .catch(jasmine.failureCallback);
+
+      injectEnv('$httpBackend').flush();
+
+      test._expectedResult((test._expectFail ? jasmine.failureCallback : jasmine.successCallback).mostRecentCall.args[0]);
     } else {
-      if (isResourceResult) {
-        expect(callback).toHaveBeenCalled();
+      injectEnv('$httpBackend').flush();
+
+      if (test._expectFail) {
+        expect(promise).toReject();
       } else {
-        expect(callback).toHaveBeenCalledWithRestangularized(test._expectedResult || {});
+        expect(promise).toResolve();
       }
     }
 
-    injectEnv('$httpBackend').verifyNoOutstandingExpectation();
   };
 
   return test;
