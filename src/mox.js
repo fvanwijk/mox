@@ -32,16 +32,9 @@ function MoxBuilder() {
     postInjectFns = [];
   }
 
-  function checkDeprecatedArguments (args, type) {
+  function assertDeprecatedArguments (args) {
     if (!args[0]) {
       throw Error('Please provide arguments');
-    }
-
-    if (angular.isArray(args[0])) {
-      console.warn('Passing ' + type + ' names as array is deprecated. Please pass multiple arguments', args[0]);
-      return args[0];
-    } else {
-      return args;
     }
   }
 
@@ -85,8 +78,10 @@ function MoxBuilder() {
       return methodNames;
     }
 
-    var mockNames = checkDeprecatedArguments(arguments, 'service');
+    assertDeprecatedArguments(arguments);
 
+    var mockNames = arguments;
+    
     moduleFns.push(function mockServicesFn($provide) {
       var injector = angular.injector(['ng', 'ngMock', moduleName]);
 
@@ -133,7 +128,9 @@ function MoxBuilder() {
    * @returns {Object}
    */
   this.mockDirectives = function mockDirectives(directiveName) {
-    var directiveNames = checkDeprecatedArguments(arguments, 'directive');
+    assertDeprecatedArguments(arguments);
+
+    var directiveNames = arguments;
 
     moduleFns.push(function mockDirectivesFn($provide) {
       angular.forEach(directiveNames, function (directive) {
@@ -167,7 +164,9 @@ function MoxBuilder() {
    * @returns {Object}
    */
   this.disableDirectives = function (directiveName) {
-    var directiveNames = checkDeprecatedArguments(arguments, 'directive');
+    assertDeprecatedArguments(arguments);
+
+    var directiveNames = arguments;
 
     moduleFns.push(function disableDirectivesFn($provide) {
       angular.forEach(directiveNames, function (directiveName) {
@@ -186,7 +185,9 @@ function MoxBuilder() {
    * @returns {Object}
    */
   this.mockControllers = function mockControllers(controllerName) {
-    var controllerNames = checkDeprecatedArguments(arguments, 'controller');
+    assertDeprecatedArguments(arguments);
+
+    var controllerNames = arguments;
 
     moduleFns.push(function ($controllerProvider) {
       angular.forEach(controllerNames, function (controllerName) {
@@ -204,7 +205,9 @@ function MoxBuilder() {
    * @returns {Object}
    */
   this.mockTemplates = function mockTemplates(template) {
-    var templates = checkDeprecatedArguments(arguments, 'template');
+    assertDeprecatedArguments(arguments);
+
+    var templates = arguments;
 
     postInjectFns.push(function () {
       var $templateCache = injectEnv('$templateCache');
