@@ -811,16 +811,16 @@ function requestTest() {
     var promise = response.$promise || response;
 
     if (angular.isFunction(test._expectedResult)) {
-      jasmine.successCallback = jasmine.createSpy('success callback');
-      jasmine.failureCallback = jasmine.createSpy('failure callback');
+      var successCallback = jasmine.createSpy('success callback');
+      var failureCallback = jasmine.createSpy('failure callback');
 
       promise
-        .then(jasmine.successCallback)
-        .catch(jasmine.failureCallback);
+        .then(successCallback)
+        .catch(failureCallback);
 
       injectEnv('$httpBackend').flush();
 
-      test._expectedResult((test._expectFail ? jasmine.failureCallback : jasmine.successCallback).mostRecentCall.args[0]);
+      test._expectedResult((test._expectFail ? failureCallback : successCallback).mostRecentCall.args[0]);
     } else {
       injectEnv('$httpBackend').flush();
 
