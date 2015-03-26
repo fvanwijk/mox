@@ -111,6 +111,30 @@ function MoxBuilder() {
   };
 
   /**
+   * Register constants to be mocked and define their value. These mocks can be injected in a config function immediately.
+   * Pass a name and value as parameters for one constant, or an object with definitions for multiple constants.
+   *
+   * @param {...string|Object} config
+   */
+  this.mockConstants = function mockConstants(config) {
+    assertDeprecatedArguments(arguments);
+
+    if (angular.isString(config)) {
+      var key = arguments[0];
+      config = {};
+      config[key] = arguments[1];
+    }
+
+    moduleFns.push(function mockConstantsFn($provide) {
+      angular.forEach(config, function (value, mockName) {
+        mox.save($provide, mockName, value, 'constant');
+      });
+    });
+
+    return this;
+  };
+
+  /**
    * Register directive(s) to be mocked. The mock will be an empty directive with the same isolate scope as the original directive,
    * so the isolate scope of the directive can be tested:
    *
@@ -310,10 +334,12 @@ function MoxBuilder() {
    * @param $provide
    * @param {string} mockName
    * @param {Object} mock
+   * @param {string} recipe
    * @returns {*}
    */
-  this.save = function saveMock($provide, mockName, mock) {
-    $provide.value(mockName, mock);
+  this.save = function saveMock($provide, mockName, mock, recipe) {
+    recipe = recipe || 'value';
+    $provide[recipe](mockName, mock);
     mox.get[mockName] = mock;
     return mock;
   };
