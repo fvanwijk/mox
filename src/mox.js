@@ -531,20 +531,6 @@ function noop() {}
  *********************/
 
 /**
- * Compile a template and digest the $scope
- *
- * @param {string} template name
- * @param {Object} $scope to bind to the template
- * @returns the created element
- */
-function compileTemplate(template, $scope) {
-  var element = injectEnv('$compile')('<div>' + injectEnv('$templateCache').get(template) + '</div')($scope);
-  $scope.$digest();
-  currentSpec.element = element;
-  return element;
-}
-
-/**
  * Compile HTML and digest the scope (for example a directive)
  *
  * @param {string} html
@@ -556,6 +542,17 @@ function compileHtml(html, $scope) {
   $scope.$digest();
   currentSpec.element = element;
   return element;
+}
+
+/**
+ * Compile a template and digest the $scope
+ *
+ * @param {string} template name
+ * @param {Object} $scope to bind to the template
+ * @returns the created element
+ */
+function compileTemplate(template, $scope) {
+  return compileHtml('<div>' + injectEnv('$templateCache').get(template) + '</div>', $scope);
 }
 
 /**
