@@ -10,6 +10,7 @@ Copy moxConfig.js to your project test folder. Put mox.js and moxConfig.js in yo
 
     files: [
     ...
+      'bower_components/jasmine-mox-matchers/src/jasmine-mox-matchers-1.x.js' // or 2.x if you are using Jasmine 2
       'bower_components/mox/mox.js',
       'test/moxConfig.js',
     ...
@@ -29,10 +30,13 @@ Copy moxConfig.js to your project test folder. Put mox.js and moxConfig.js in yo
               $provide.constant('yolo', 'swag');
             }
           )
-          .mockServices([
+          .mockServices(
             'FooService',
             'barFilter'
-          ])
+          )
+          .mockConstants({
+            fooConstant: value
+          })
           .mockDirectives([
             'bazDirective',
             {
@@ -40,15 +44,12 @@ Copy moxConfig.js to your project test folder. Put mox.js and moxConfig.js in yo
               priority: 0,
               restrict: 'EAC',
               scope: { firstScopeVar: '=', secondScopeVar: '@' }
-              template: '<div>Alternative directive template</div>'
+              template: '<div>Custom directive template</div>'
             }
           ])
           .disableDirectives([
             'fooDirective'
           ])
-          .run();
-          
-        mox
           .setupResults({
             fooService: {
               getBars: ['barData1', 'barData2'],
@@ -61,7 +62,8 @@ Copy moxConfig.js to your project test folder. Put mox.js and moxConfig.js in yo
           .mockTemplates([
             'scripts/views/template1.html',
             'scripts/views/template2.html',
-          ]);
+          ])
+          .run();
         
         it('should do something', inject(function (FooService) {
           
@@ -90,8 +92,8 @@ Returns the Mox instance to make chaining possible.
 
 ### mox.mockServices()
 
-Registers services to be mocked. This can be an Angular factory, service and/or filter. The mock factory function needs to be
-defined in the moxConfig.js file.
+Registers services to be mocked. This can be an Angular factory, service and/or filter. The mocked service will be a spy
+object with spies for every method in the original service, unless there is a factory function defined in the moxConfig.js file.
 This function tries create a resource mock or normal mock depending on the mock name prefix (`Filter` or `Resource`).
 The following mocks are created:
 
@@ -99,10 +101,11 @@ The following mocks are created:
 * when name ends with `Filter`: jasmine spy
 * when name ends with `Resource`: jasmine spy object with spy methods `get`, `query`, `save`, `remove`, `delete`,
   `$get`, `$query`, `$save`, `$remove`, `$delete`
+* otherwise a jasmine spy object with spy methods from the original service
 
 One service:
 
-    mox.mockServices('FooResource');
+    mox.mockServices('FooResource')
 
 Multiple services:
 
@@ -112,6 +115,22 @@ Multiple services:
     ])
 
 Returns the Mox instance to make chaining possible.
+
+### mox.mockConstants()
+
+Register constants to be mocked and define their value. These mocks can be injected in a config function immediately.
+Pass a name and value as parameters for one constant, or an object with definitions for multiple constants.
+
+One constant:
+
+    mox.mockConstant('FooConstant', 'value')
+    
+Multiple constants:
+
+    mox.mockConstant({
+      FooConstant: value,
+      BarConstant: anotherValue
+    })
 
 ### mox.mockDirectives()
 
@@ -137,7 +156,7 @@ Returns the Mox instance to make chaining possible.
 Registers controllers to be mocked. This is useful for view specs where the template contains an `ng-controller`.
 The view's `$scope` is not set by the controller anymore, but you have to set the `$scope` manually.
 
-    mox.mockControllers('FooController');
+    mox.mockControllers('FooController')
 
 Returns the Mox instance to make chaining possible.
 

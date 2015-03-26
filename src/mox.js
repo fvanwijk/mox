@@ -62,7 +62,7 @@ function MoxBuilder() {
    *
    * @param {...string|string[]} mockName service(s) to mock
    */
-  this.mockServices = function MockServices(mockName) {
+  this.mockServices = function mockServices(mockName) {
     function getMethodNames(obj) {
       if (angular.isFunction(obj) && obj.name !== 'Resource') {
         return;
@@ -388,7 +388,7 @@ function MoxBuilder() {
     return function ($provide) {
       var mock = jasmine.createSpyObj(mockName, Object.keys(allMethods));
 
-      // Create a mocked constructor that returns the mock itmox plus the data that is provided as argument
+      // Create a mocked constructor that returns the mock itself plus the data that is provided as argument
       var fn = function (data) {
         return angular.extend({}, mock, data);
       };
