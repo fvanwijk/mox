@@ -265,8 +265,8 @@ Finally this framework contains a lot of utility functions:
 
 ### Compile shortcuts
 
-* `compileTemplate(path)`: Returns a compiled template and digest the $scope.
-* `compileHtml(html)`: Returns compiled HTML and digest the $scope. Useful for directives.
+* `compileTemplate(path, $scope)`: Returns a compiled and linked template and digest the $scope.
+* `compileHtml(html, $scope)`: Returns compiled and linked HTML and digest the $scope. Useful for directives.
 * `compileHtmlOnDom(html)`: Compiles given html on the actual browser's DOM using window.document instead of an isolated tree.
 The regular compileHtml() function is preferred as it's faster and does not require manual cleanup.
 Only use this function when you cannot trigger browser behaviour using compileHtml().

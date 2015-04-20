@@ -489,12 +489,12 @@ function createScope(params) {
  * Creates a controller and runs the controller function.
  *
  * @param {string} ctrlName controller to create
- * @param {Object} $scope variables to bind to injected $scope initially
+ * @param {Object} $scope to inject into the created controller. If not given, look if there is a scope created with createScope().
  * @param {Object} [locals] optional local injections
  * @returns {*}
  */
 function createController(ctrlName, $scope, locals) {
-  return injectEnv('$controller')(ctrlName, angular.extend({ $scope: $scope }, locals || {}));
+  return injectEnv('$controller')(ctrlName, angular.extend({ $scope: $scope || currentSpec.$scope }, locals || {}));
 }
 
 /**
@@ -517,7 +517,7 @@ function mockDate(dateString) {
 
 /**
  * Depends on jasmine-jquery
- * @param path
+ * @param {String} path
  * @returns {*}
  */
 function getMockData(path) {
@@ -531,28 +531,62 @@ function noop() {}
  *********************/
 
 /**
- * Compile HTML and digest the scope (for example a directive)
+ * Compile HTML and digest the scope (for example a directive).
+ *
+ * Example:
+ * compileHtml('<p>This is a test</p>', $scope, true);
+ *
+ * Html added to body:
+ *
+ * ```
+ * <div id="jasmine-fixtures"><p>This is a test</p></div>
+ * ```
+ *
+ * Html added to body when mox.testTemplateAppendSelector = '#container' and mox.testTemplatePath = 'container.html'.
+ * Contents of container.html: <div id="#container"><h1>This is a container</h1></div>
+ *
+ * ```
+ * <div id="jasmine-fixtures"><div id="#container"><h1>This is a container</h1><p>This is a test</p></div></div>
+ * ```
  *
  * @param {string} html
- * @param {Object} $scope to bind to the element
+ * @param {Object} $scope to bind to the element. If not given, look if there is a scope created with createScope().
+ * @param {boolean} appendToBody is true when the compiled html should be added to the DOM.
+ *        Set mox.testTemplatePath to add a tempate to the body and append the html to the element with selector mox.testTemplateAppendSelector
  * @returns the created element
  */
-function compileHtml(html, $scope) {
+function compileHtml(html, $scope, appendToBody) {
+  $scope = $scope || currentSpec.$scope;
+  if (appendToBody === undefined) { appendToBody = true; }
+
   var element = injectEnv('$compile')(html)($scope);
-  $scope.$digest();
+
+  if (appendToBody) {
+    var container = $(document.body);
+
+    if (mox.testTemplatePath && mox.testTemplateAppendSelector) {
+      jasmine.getFixtures().load(mox.testTemplatePath);
+      container = container.find(mox.testTemplateAppendSelector);
+    }
+    container.append(element);
+  }
+
   currentSpec.element = element;
-  return element;
+  $scope.$digest();
+  return currentSpec.element;
 }
 
 /**
- * Compile a template and digest the $scope
+ * Compile a template and digest the $scope.
+ * When the html will not be added to the body, the html is wrapped in a div.
  *
  * @param {string} template name
  * @param {Object} $scope to bind to the template
  * @returns the created element
  */
-function compileTemplate(template, $scope) {
-  return compileHtml('<div>' + injectEnv('$templateCache').get(template) + '</div>', $scope);
+function compileTemplate(template, $scope, appendToBody) {
+  var html = injectEnv('$templateCache').get(template);
+  return compileHtml('<div>' + html + '</div>', $scope, appendToBody);
 }
 
 /**
@@ -564,6 +598,8 @@ function compileTemplate(template, $scope) {
  * @param {string} html
  * @param {Object} $scope
  * @returns the created element on window.document.body.
+ *
+ * @deprecated We want all elements to be appended to document body via default via compileHtml
  */
 function compileHtmlOnDom(html, $scope) {
   var element = compileHtml(html, $scope);
@@ -584,6 +620,8 @@ function compileHtmlOnDom(html, $scope) {
 
 /**
  * Remove the html that was created using compileHtmlOnDom() from the DOM
+ *
+ * @deprecated
  */
 function removeCompiledHtmlFromDom() {
   return injectEnv('$document').find('body').find('#test-input-container').remove();
