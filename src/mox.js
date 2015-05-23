@@ -1,6 +1,3 @@
-var moxConfig = {};
-var mox = angular.injector(['mox']).get('Mox');
-
 /**
  * Constructor function for a Mox object
  */
@@ -412,5 +409,8 @@ function MoxBuilder() {
   return this;
 }
 
+var moxConfig = {};
 angular.module('mox', [])
   .service('Mox', MoxBuilder);
+
+var mox = angular.injector(['mox']).get('Mox');

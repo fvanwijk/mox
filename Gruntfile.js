@@ -53,12 +53,12 @@ module.exports = function (grunt) {
       all: {
         src: [
           'Gruntfile.js',
-          '<%= paths.src %>/{,**/}*.js'
+          '<%= paths.src %>/**/*.js'
         ]
       },
       test: {
         src: [
-          'test/{,**/}*.js'
+          'test/**/*.js'
         ]
       }
     },
@@ -70,30 +70,37 @@ module.exports = function (grunt) {
       dist: {
         options: {
           thresholds: {
-            statements: 97,
-            branches: 80,
-            functions: 100,
-            lines: 97
+            statements: 24,
+            branches: 8,
+            functions: 9,
+            lines: 24
           },
           dir: 'coverage',
           root: '<%= paths.test %>'
         }
       }
     },
+    copy: {
+      dist: {
+        src: '<%= paths.src %>/moxConfig.js',
+        dest: '<%= paths.dist %>/moxConfig.js'
+      }
+    },
     concat: {
       dist: {
         src: [
-          '<%= paths.src %>/**/*.js'
+          '<%= paths.src %>/**/*.js',
+          '!<%= paths.src %>/moxConfig.js'
         ],
-        dest: 'dist/<%= pkg.name %>.js'
+        dest: '<%= paths.dist %>/<%= pkg.name %>.js'
       }
     },
     uglify: {
-      build: {
+      dist: {
         expand: true,
-        cwd: 'src/',
-        src: '*.js', // dist when using concat
-        dest: 'dist',
+        cwd: '<%= paths.dist %>/',
+        src: ['*.js', '!moxConfig.js'],
+        dest: '<%= paths.dist %>',
         ext: '.min.js'
       }
     },
@@ -110,7 +117,7 @@ module.exports = function (grunt) {
     }
   });
 
-  grunt.registerTask('build', ['test', 'clean', 'uglify']);
+  grunt.registerTask('build', ['clean', 'test', 'copy', 'concat', 'uglify']);
   grunt.registerTask('test', ['jscs', 'jshint', 'lintspaces', 'jsonlint', 'karma', 'coverage']);
   grunt.registerTask('default', ['build']);
 
