@@ -283,14 +283,14 @@ function MoxBuilder() {
         }
 
         function setSpyResult(spy, returnValue) {
-          if (typeof returnValue == 'function' || false) {
-            if (currentSpec.isJasmineV2()) {
+          if (typeof returnValue === 'function' || false) {
+            if (currentSpec.isJasmine2) {
               spy.and.callFake(returnValue);
             } else {
               spy.andCallFake(returnValue);
             }
           } else {
-            if (currentSpec.isJasmineV2()) {
+            if (currentSpec.isJasmine2) {
               spy.and.returnValue(returnValue);
             } else {
               spy.andReturn(returnValue);
@@ -392,7 +392,7 @@ function MoxBuilder() {
       var fn = function (data) {
         return angular.extend({}, mock, data);
       };
-      if (currentSpec.isJasmineV2()) {
+      if (currentSpec.isJasmine2) {
         mock.constructor.and.callFake(fn);
       } else {
         mock.constructor.andCallFake(fn);
