@@ -13,8 +13,8 @@ module.exports = function (config) {
     files: [
       'bower_components/angular/angular.js',
       'bower_components/angular-mocks/angular-mocks.js',
+      'bower_components/jasmine-mox-matchers/src/jasmine-mox-matchers.js',
 
-      'src/*.js',
       'src/**/*.js',
       'test/**/*.js'
     ],

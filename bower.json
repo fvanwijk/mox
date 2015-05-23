@@ -21,7 +21,7 @@
   ],
   "dependencies": {
     "angular-mocks": "1.2.21",
-    "jasmine-mox-matchers": "~0.0.1"
+    "jasmine-mox-matchers": "0.1.0"
   },
   "resolutions": {
     "angular-mocks": "1.2.21",
