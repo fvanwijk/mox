@@ -77,7 +77,7 @@ function createController(ctrlName, $scope, locals) {
 
 /**
  * Mock the current date.
- * Specs that use momentjs or Date depend on the current date
+ * Specs that use Date depend on the current date
  * will introduce unreliable behaviour when the current date is not mocked.
  * @param {string} dateString
  */
@@ -85,7 +85,7 @@ function mockDate(dateString) {
   var clock;
 
   beforeEach(function () {
-    clock = sinon.useFakeTimers(+moment(dateString));
+    clock = sinon.useFakeTimers(+new Date(dateString));
   });
 
   afterEach(function () {
