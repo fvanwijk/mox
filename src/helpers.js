@@ -13,7 +13,7 @@ beforeEach(function () {
  * angular-mocks v1.2.x clears the cache after every spec. We do not want this when we compile a template once in a beforeAll
  */
 if (typeof beforeAll !== 'undefined')  {
-  angular.mock.clearDataCache = noop;
+  angular.mock.clearDataCache = angular.noop;
 }
 
 /**
@@ -102,6 +102,9 @@ function getMockData(path) {
   return copy(getJSONFixture(path));
 }
 
+/**
+ * @deprecated Use angular.noop() instead
+ */
 function noop() {}
 
 /*********************

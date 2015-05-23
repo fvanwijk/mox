@@ -215,8 +215,8 @@ function MoxBuilder() {
 
     moduleFns.push(function ($controllerProvider) {
       angular.forEach(controllerNames, function (controllerName) {
-        $controllerProvider.register(controllerName, noop);
-      })
+        $controllerProvider.register(controllerName, angular.noop);
+      });
     });
 
     return this;
