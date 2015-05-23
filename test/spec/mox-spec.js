@@ -1,3 +1,3 @@
-/**
- * Created by Frank on 23/05/15.
- */
+describe('The Mox library', function () {
+
+});

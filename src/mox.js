@@ -1,7 +1,5 @@
-/* jshint strict:false */
-/* jshint unused:false */
-/* jshint -W020, -W079 */
 var moxConfig = {};
+var mox = angular.injector(['mox']).get('Mox');
 
 /**
  * Constructor function for a Mox object
@@ -50,7 +48,7 @@ function MoxBuilder() {
    */
   this.module = function module() {
     moduleName = arguments[0];
-    moduleFns = Array.prototype.slice.call(arguments, 0).concat(moduleFns);
+    moduleFns = moduleFns.concat(Array.prototype.slice.call(arguments, 0));
 
     return this;
   };
@@ -62,7 +60,7 @@ function MoxBuilder() {
    *
    * @param {...string|string[]} mockName service(s) to mock
    */
-  this.mockServices = function mockServices(mockName) {
+  this.mockServices = function mockServices() {
     function getMethodNames(obj) {
       if (angular.isFunction(obj) && obj.name !== 'Resource') {
         return;
@@ -86,12 +84,13 @@ function MoxBuilder() {
       var injector = angular.injector(['ng', 'ngMock', moduleName]);
 
       angular.forEach(mockNames, function (mockName) {
+        var mockArgs;
         if (angular.isArray(mockName)) {
-          var mockArgs = angular.copy(mockName);
+          mockArgs = angular.copy(mockName);
           mockName = mockArgs.shift();
           mockArgs.unshift($provide);
         } else {
-          var mockArgs = [$provide];
+          mockArgs = [$provide];
         }
 
         if (mockName in mox.factories) {
@@ -151,7 +150,7 @@ function MoxBuilder() {
    * @param {...string|string[]|...Object|Object[]} directiveName directive(s) to mock
    * @returns {Object}
    */
-  this.mockDirectives = function mockDirectives(directiveName) {
+  this.mockDirectives = function mockDirectives() {
     assertDeprecatedArguments(arguments);
 
     var directiveNames = arguments;
@@ -187,7 +186,7 @@ function MoxBuilder() {
    * @param {string[]|string} directiveName directive(s) to disable
    * @returns {Object}
    */
-  this.disableDirectives = function (directiveName) {
+  this.disableDirectives = function () {
     assertDeprecatedArguments(arguments);
 
     var directiveNames = arguments;
@@ -208,7 +207,7 @@ function MoxBuilder() {
    * @param {...string|string[]} controllerName
    * @returns {Object}
    */
-  this.mockControllers = function mockControllers(controllerName) {
+  this.mockControllers = function mockControllers() {
     assertDeprecatedArguments(arguments);
 
     var controllerNames = arguments;
@@ -228,7 +227,7 @@ function MoxBuilder() {
    * @param {...string|string[]|...Object|Object[]} template
    * @returns {Object}
    */
-  this.mockTemplates = function mockTemplates(template) {
+  this.mockTemplates = function mockTemplates() {
     assertDeprecatedArguments(arguments);
 
     var templates = arguments;
@@ -242,7 +241,7 @@ function MoxBuilder() {
           path = templateConfig;
           template = '<div>This is a mock for ' + path + '</div>';
         } else {
-          angular.forEach(templateConfig, function(val, key) {
+          angular.forEach(templateConfig, function (val, key) {
             template = val;
             path = key;
           });
@@ -276,8 +275,9 @@ function MoxBuilder() {
     postInjectFns.push(function setupResultsFn() {
       var config = configFn();
       angular.forEach(config, function (mockConfig, mockName) {
+        var mock;
         if (mockName in mox.get) {
-          var mock = mox.get[mockName];
+          mock = mox.get[mockName];
         } else {
           throw new Error(mockName + ' is not in mox.get');
         }
@@ -331,7 +331,7 @@ function MoxBuilder() {
    * Registers a mock and save it to the cache.
    * This method usually is used when defining a custom mock factory function or when manually creating a mock
    *
-   * @param $provide
+   * @param {Object} $provide
    * @param {string} mockName
    * @param {Object} mock
    * @param {string} recipe
@@ -384,7 +384,7 @@ function MoxBuilder() {
       allMethods['$' + methodName] = '$' + methodName;
     }
     angular.forEach(methodNames, addToMethodList);
-    allMethods['constructor'] = 'constructor';
+    allMethods.constructor = 'constructor';
     return function ($provide) {
       var mock = jasmine.createSpyObj(mockName, Object.keys(allMethods));
 
@@ -414,6 +414,3 @@ function MoxBuilder() {
 
 angular.module('mox', [])
   .service('Mox', MoxBuilder);
-
-window.mox = angular.injector(['mox']).get('Mox');
-

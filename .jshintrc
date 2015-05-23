@@ -13,7 +13,7 @@
   "noarg": true,
   "quotmark": "single",
   "undef": true,
-  "unused": true,
+  "unused": false,
   "strict": false,
   "trailing": true,
   "smarttabs": true,
@@ -21,9 +21,11 @@
   "globals": {
     "_": false,
     "angular": false,
-    "expectMatcher": false,
-    "jasmineV1MoxMatchers": true,
-    "jasmineV2MoxMatchers": true,
-    "module": false
+    "currentSpec": true,
+    "getJSONFixture": false,
+    "injectEnv": false,
+    "mox": true,
+    "moxConfig": true,
+    "sinon": false
   }
 }

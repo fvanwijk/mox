@@ -143,7 +143,7 @@ function compileHtml(html, $scope, appendToBody) {
   var element = injectEnv('$compile')(html)($scope);
 
   if (appendToBody) {
-    var container = $(document.body);
+    var container = angular.element(document.body);
 
     if (mox.testTemplatePath && mox.testTemplateAppendSelector) {
       jasmine.getFixtures().load(mox.testTemplatePath);
@@ -293,7 +293,7 @@ function extendElement(element) {
   element.findBinding = function (binding) {
     var bindings = element.find('.ng-binding');
     var matches = [];
-    angular.forEach(bindings, function (bindingElem){
+    angular.forEach(bindings, function (bindingElem) {
       var dataBinding = angular.element(bindingElem).data('$binding');
       if (dataBinding) {
         var bindingName = dataBinding.exp || dataBinding[0].exp || dataBinding;
@@ -302,7 +302,7 @@ function extendElement(element) {
         }
       }
     });
-    return $(matches);
+    return angular.element(matches);
   };
   return element;
 }
@@ -447,7 +447,7 @@ function requestTest() {
 
   test.run = function run() {
     test._response = test._response || {};
-    injectEnv('$httpBackend').expect(test._httpMethod, {test: validateUrl}, test._data).respond(test._response);
+    injectEnv('$httpBackend').expect(test._httpMethod, { test: validateUrl }, test._data).respond(test._response);
 
     var response = test._method.apply(this, test._methodArguments);
     var promise = response.$promise || response;
