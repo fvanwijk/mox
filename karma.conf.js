@@ -3,12 +3,17 @@ module.exports = function (config) {
     basePath: '',
     frameworks: ['jasmine'],
     files: [
+      'bower_components/jquery/dist/jquery.js',
       'bower_components/angular/angular.js',
       'bower_components/angular-mocks/angular-mocks.js',
+      'bower_components/jasmine-jquery/lib/jasmine-jquery.js',
       'bower_components/jasmine-mox-matchers/src/jasmine-mox-matchers.js',
 
       'src/**/*.js',
-      'test/**/*.js'
+
+      'test/mock/*.js',
+      'test/mock/html/**/*.html',
+      'test/spec/**/*.js'
     ],
     exclude: [],
     port: 8080,
