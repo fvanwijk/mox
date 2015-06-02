@@ -144,15 +144,13 @@ function compileHtml(html, $scope, appendToBody) {
   if (appendToBody === undefined) { appendToBody = true; }
 
   var element = injectEnv('$compile')(html)($scope);
-
   if (appendToBody) {
-    var container = angular.element(document.body);
-
     if (mox.testTemplatePath && mox.testTemplateAppendSelector) {
       jasmine.getFixtures().load(mox.testTemplatePath);
-      container = container.find(mox.testTemplateAppendSelector);
+      angular.element(document.body).find(mox.testTemplateAppendSelector).append(element);
+    } else {
+      jasmine.getFixtures().set(element);
     }
-    container.append(element);
   }
 
   currentSpec.element = element;
