@@ -1,3 +1,6 @@
 {
-
+  "extends": "../.jshintrc",
+  "globals": {
+    "inject": false
+  }
 }
