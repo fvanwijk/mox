@@ -80,6 +80,9 @@ function createController(ctrlName, $scope, locals) {
  * Specs that use Date depend on the current date
  * will introduce unreliable behaviour when the current date is not mocked.
  * @param {string} dateString
+ *
+ * @deprecated This function requires too much external dependencies.
+ * Jasmine 2.x can mock the date with jasmine.clock().mockDate(new Date(dateString))
  */
 function mockDate(dateString) {
   var clock;
@@ -284,11 +287,15 @@ function rejectingResourceResult(errorMessage) {
  * Util functions for viewspecs *
  ********************************/
 
-// based on protractor's findBindings / by.binding selector
-// https://github.com/angular/protractor/blob/master/lib/clientsidescripts.js#L44
-// 'extends' the given jquery element with a findBinding method to locate an element by its
-// angularjs binding. Avoids having to add IDs or classes to elements to make them findable
-// in view specs. Returns a jquery-wrapped (list of) items.
+/**
+ * based on protractor's findBindings / by.binding selector
+ * https://github.com/angular/protractor/blob/master/lib/clientsidescripts.js#L44
+ * 'extends' the given jquery element with a findBinding method to locate an element by its
+ * angularjs binding. Avoids having to add IDs or classes to elements to make them findable
+ * in view specs. Returns a jquery-wrapped (list of) items.
+ *
+ * @deprecated This method is barely used and it is easier to find a suitable CSS selector
+ */
 function extendElement(element) {
   element.findBinding = function (binding) {
     var bindings = element.find('.ng-binding');
@@ -307,7 +314,7 @@ function extendElement(element) {
   return element;
 }
 
-/*
+/**
  * Extends an angular DOM element with attributes that are found on the element.
  *
  * e.g.
@@ -318,6 +325,8 @@ function extendElement(element) {
  *
  * var element = extendedElement(rootElement.find('.container'), {title: 'h1', subtitle: 'p.sub'});
  * element.title.text() // The container
+ *
+ * @deprecated use addSelectors
  */
 function extendedElement(e, extensions) {
   var exts = {};
@@ -337,6 +346,8 @@ function extendedElement(e, extensions) {
  *
  * var element = extendedElementWithChildren(rootElement.find('table thead tr'), ['name','age']);
  * element.name.text() // Your name
+ *
+ * @deprecated use addSelectors
  */
 function extendedElementWithChildren(e, keys) {
   var children = [];
@@ -349,6 +360,134 @@ function extendedElementWithChildren(e, keys) {
     pairs[keys[i]] = value;
   });
   return angular.extend(e, pairs);
+}
+
+/**
+ * Adds helper functions to an element that simplify element selections.
+ * The selection is only performed when the generated helper functions are called, so
+ * these work properly with changing DOM elements.
+ *
+ * Template example:
+ *
+ * <div>
+ *   <div id="header"></div>
+ *   <div id="body">
+ *     <div class="foo">Foo</div>
+ *     <div data-test="bar">
+ *       Bar <span class="hl">something</span>
+ *     </div>
+ *     <div id="num-1-1">Test 1</div>
+ *     <div id="num-2-1">Test 2</div>
+ *     <div id="num-2-2">Test 3</div>
+ *   </div>
+ *   <div id="footer">
+ *     <h3>Footer <span>title</span></h3>
+ *     <div>Footer <span>content</span></div>
+ *   </div>
+ * </div>
+ *
+ *
+ * Initialisation example:
+ *
+ * var element = compileHtml(template);
+ * addSelectors(element, {
+ *   header: '[id="header"]',               // shorthand string notation
+ *   body: {                                // full object notation
+ *     selector: '#body',             // element selector
+ *     sub: {                               // descendant selectors
+ *       foo: '.foo',
+ *       bar: {
+ *         selector: '[data-test="bar"]',
+ *         sub: {
+ *           highlight: '.hl'
+ *         }
+ *       },
+ *       num: '[id="num-{0}-{1}"]'          // parameter placeholders can be used
+ *     }
+ *   },
+ *   footer: {
+ *     selector: '#footer',
+ *     children: [                          // shorthand for child nodes, starting from first node
+ *       'heading',                         // shorthand string notation
+ *       {                                  // full object notation
+ *         name: 'content',
+ *         sub: {
+ *           innerSpan: 'span'
+ *         }
+ *       }
+ *     ]
+ *     sub: {                               // sub and children can be mixed
+ *       spans: 'span'                      // (as long as they don't overlap)
+ *     }
+ *   }
+ * });
+ *
+ *
+ * Test examples:
+ *
+ * expect(element.header()).toExist();
+ *
+ * expect(element.body()).toExist();
+ * expect(element.body().foo()).toExist();
+ * expect(element.body().bar()).toExist();
+ * expect(element.body().bar().highlight()).toExist();
+ * expect(element.body().num(1, 1)).toExist();
+ * expect(element.body().num(2, 1)).toExist();
+ * expect(element.body().num(2, 2)).toExist();
+ *
+ * expect(element.footer()).toExist();
+ * expect(element.footer().heading()).toExist();
+ * expect(element.footer().content()).toExist();
+ * expect(element.footer().content().innerSpan()).toExist();
+ * expect(element.footer().spans().length).toBe(2);
+ *
+ *
+ * @param {Object} element
+ * @param {Object} selectors
+ * @returns {Object} element
+ */
+function addSelectors(element, selectors) {
+
+  function setPropertyIfUndefined(obj, prop, value) {
+    if (!angular.isDefined(obj[prop])) {
+      obj[prop] = value;
+    }
+  }
+  function addChildFn(element, children) {
+    angular.forEach(children, function (child, idx) {
+      var name = angular.isObject(child) ? child.name : child,
+        sub = child.sub;
+
+      setPropertyIfUndefined(element, name, function () {
+        var childElement = element.children().eq(idx);
+        addSelectors(childElement, sub);
+        return childElement;
+      });
+    });
+  }
+
+  angular.forEach(selectors, function (value, key) {
+    var selector = angular.isObject(value) ? value.selector : value,
+      sub = value.sub,
+      children = value.children;
+
+    setPropertyIfUndefined(element, key, function () {
+      var args = arguments, childElement;
+      if (selector) {
+        var replacedSelector = selector.replace(/{(\d+)}/g, function (match, group) {
+          return args[group];
+        });
+        childElement = element.find(replacedSelector);
+      } else {
+        childElement = element;
+      }
+      addSelectors(childElement, sub);
+      addChildFn(childElement, children);
+      return childElement;
+    });
+  });
+
+  return element;
 }
 
 /**
