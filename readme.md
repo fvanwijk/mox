@@ -259,7 +259,7 @@ Finally this framework contains a lot of utility functions:
 
 * Functions to prevent injecting common stuff like `$q`, `$controller`, `$compile` and `$rootScope` in the spec
 * Functions for quick promise and resource result mocking
-* Functions to prevent a lot of DOM traversals (extendedElement, extendElement)
+* Function to prevent writing duplicated selectors (addSelectors)
 
 ### Generic shortcuts for specs
 
@@ -297,28 +297,82 @@ If you provide a mock, the functions of this mock are copied to the result as $-
 Extends the element with function to be called on that element. The only extended function currently is `findByBinding`
 which traverses that childNodes to find an element with the given binding. It mimics the Protractor findBindings / by.binding.
 
-### extendedElement
+### addSelectors
 
-Extends the element with nodes that are accessible via a property
+Adds helper functions to an element that simplify element selections.
+The selection is only performed when the generated helper functions are called, so these work properly with changing DOM elements.
 
-    <div class="container">
-      <h1>The container</h1>
-      <p class="sub">with a subtitle</p>
+Example template:
+
+    <div>
+      <div id="header"></div>
+      <div id="body">
+        <div class="foo">Foo</div>
+        <div data-test="bar">
+          Bar <span class="hl">something</span>
+        </div>
+        <div id="num-1-1">Test 1</div>
+        <div id="num-2-1">Test 2</div>
+        <div id="num-2-2">Test 3</div>
+      </div>
+      <div id="footer">
+        <h3>Footer <span>title</span></h3>
+        <div>Footer <span>content</span></div>
+      </div>
     </div>
 
-    var element = extendedElement(rootElement.find('.container'), {title: 'h1', subtitle: 'p.sub'});
-    element.title.text() // The container
+Test initialisation:
 
-### extendedElementWithChildren
+    var element = compileHtml(template);
+    addSelectors(element, {
+      header: '[id="header"]',               // shorthand string notation
+      body: {                                // full object notation
+        selector: '#body',                   // element selector
+        sub: {                               // descendant selectors
+          foo: '.foo',
+          bar: {
+            selector: '[data-test="bar"]',
+            sub: {
+              highlight: '.hl'
+            }
+          },
+          num: '[id="num-{0}-{1}"]'          // parameter placeholders can be used
+        }
+      },
+      footer: {
+        selector: '#footer',
+        children: [                          // shorthand for child nodes, starting from first node
+          'heading',                         // shorthand string notation
+          {                                  // full object notation
+            name: 'content',
+            sub: {
+              innerSpan: 'span'
+            }
+          }
+        ],
+        sub: {                               // sub and children can be mixed
+          spans: 'span'                      // (as long as they don't overlap)
+        }
+      }
+    });
 
-Extends the element with its children. The children are accessible via the provided property list.
+Test code (Jasmine-style):
 
-     <table><thead><tr>
-       <th>Your name</th><th> Your age</th>
-     </tr></thead></table>
-
-     var element = extendedElementWithChildren(rootElement.find('table thead tr'), ['name','age']);
-     element.name.text() // Your name
+    expect(element.header()).toExist();
+    
+    expect(element.body()).toExist();
+    expect(element.body().foo()).toExist();
+    expect(element.body().bar()).toExist();
+    expect(element.body().bar().highlight()).toExist();
+    expect(element.body().num(1, 1)).toExist();
+    expect(element.body().num(2, 1)).toExist();
+    expect(element.body().num(2, 2)).toExist();
+    
+    expect(element.footer()).toExist();
+    expect(element.footer().heading()).toExist();
+    expect(element.footer().content()).toExist();
+    expect(element.footer().content().innerSpan()).toExist();
+    expect(element.footer().spans()).toHaveLength(2);
 
 ## Contributors
 

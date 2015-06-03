@@ -126,11 +126,183 @@ describe('The helper functions', function () {
       });
 
       it('should pass the scope and appendToBody parameter to the function that compiles the HTML', function () {
+        var origCompileHtml = compileHtml;
         compileHtml = jasmine.createSpy('compileHtml');
         compileTemplate('test.html', createScope(), true);
         expect(compileHtml).toHaveBeenCalledWith(jasmine.any(String), this.$scope, true);
+        compileHtml = origCompileHtml;
       });
 
+    });
+
+    describe('addSelectors()', function () {
+      var element;
+      beforeEach(function () {
+        element = compileHtml('\
+        <root>\
+          <element>\
+            <child id="1">\
+              <child></child>\
+            </child>\
+            <child id="2"></child>\
+          </element>\
+        </root>\
+        ', createScope());
+      });
+
+      it('should add simple selector', function () {
+        addSelectors(element, {
+          simple: 'element',
+          noMatch: 'xyz'
+        });
+        expect(element.simple()).toExist();
+        expect(element.noMatch()).not.toExist();
+      });
+
+      it('should support object notation', function () {
+        addSelectors(element, {
+          full: {
+            selector: 'element'
+          }
+        });
+        expect(element.full()).toExist();
+      });
+
+      it('should add simple sub selectors', function () {
+        addSelectors(element, {
+          withSub: {
+            selector: 'element',
+            sub: {
+              id1: '#1',
+              id2: '#2',
+              id3: '#3'
+            }
+          }
+        });
+        expect(element.withSub()).toExist();
+        expect(element.withSub().id1()).toExist();
+        expect(element.withSub().id2()).toExist();
+        expect(element.withSub().id3()).not.toExist();
+      });
+
+      it('should add full object sub selector with sub of sub', function () {
+        addSelectors(element, {
+          withSub: {
+            selector: 'element',
+            sub: {
+              id1: {
+                selector: '#1',
+                sub: {
+                  subChild: 'child',
+                  noMatch: 'element'
+                }
+              },
+              noMatch: {
+                selector: '#3',
+                sub: {
+                  noMatch: 'element'
+                }
+              }
+
+            }
+          }
+        });
+        expect(element.withSub()).toExist();
+        expect(element.withSub().id1()).toExist();
+        expect(element.withSub().id1().subChild()).toExist();
+        expect(element.withSub().id1().noMatch()).not.toExist();
+        expect(element.withSub().noMatch().noMatch()).not.toExist();
+      });
+
+      it('should add simple child selectors', function () {
+        addSelectors(element, {
+          withChild: {
+            selector: 'element',
+            children: ['child1', 'child2', 'child3']
+          }
+        });
+        expect(element.withChild()).toExist();
+        expect(element.withChild().child1()).toExist();
+        expect(element.withChild().child2()).toExist();
+        expect(element.withChild().child3()).not.toExist();
+      });
+
+      it('should add full object child selector with sub of sub', function () {
+        addSelectors(element, {
+          withChild: {
+            selector: 'element',
+            children: [{
+              name: 'child1',
+              sub: {
+                subChild: 'child',
+                noMatch: 'element'
+              }
+            }]
+          }
+        });
+        expect(element.withChild()).toExist();
+        expect(element.withChild().child1()).toExist();
+        expect(element.withChild().child1().subChild()).toExist();
+        expect(element.withChild().child1().noMatch()).not.toExist();
+      });
+
+      it('should replace placeholders in selectors', function () {
+        addSelectors(element, {
+          placeholder: 'element #{0}'
+        });
+        expect(element.placeholder()).not.toExist();
+        expect(element.placeholder(1)).toExist();
+        expect(element.placeholder(2)).toExist();
+        expect(element.placeholder(3)).not.toExist();
+
+        addSelectors(element, {
+          placeholder2: '{0} {1}'
+        });
+        expect(element.placeholder2('element', 'child')).toExist();
+      });
+
+      it('should allow grouping of selectors without parent selectors', function () {
+        addSelectors(element, {
+          group1: {
+            sub: {
+              element: '#1'
+            }
+          },
+          group2: {
+            sub: {
+              element: '#2'
+            }
+          }
+        });
+        expect(element.group1().element()).toHaveAttr('id', '1');
+        expect(element.group2().element()).toHaveAttr('id', '2');
+      });
+
+      it('should allow overwriting existing selector functions on the element', function () {
+        expect(element.root).toBeUndefined();
+        addSelectors(element, {
+          element: '#1'
+        });
+        addSelectors(element, {
+          element: '#2'
+        });
+        expect(element.element()).toHaveAttr('id', '1');
+      });
+
+      it('should throw an exception when trying to overwrite existing properties on the element', function () {
+        expect(function() {
+          addSelectors(element, {
+            val: 'element'
+          });
+        }).toThrow();
+
+        element.abc = '1';
+        expect(function() {
+          addSelectors(element, {
+            abc: 'element'
+          });
+        }).toThrow();
+      });
     });
   });
 });

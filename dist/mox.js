@@ -391,7 +391,7 @@ function extendedElementWithChildren(e, keys) {
  * addSelectors(element, {
  *   header: '[id="header"]',               // shorthand string notation
  *   body: {                                // full object notation
- *     selector: '#body',             // element selector
+ *     selector: '#body',                   // element selector
  *     sub: {                               // descendant selectors
  *       foo: '.foo',
  *       bar: {
@@ -413,7 +413,7 @@ function extendedElementWithChildren(e, keys) {
  *           innerSpan: 'span'
  *         }
  *       }
- *     ]
+ *     ],
  *     sub: {                               // sub and children can be mixed
  *       spans: 'span'                      // (as long as they don't overlap)
  *     }
@@ -437,7 +437,7 @@ function extendedElementWithChildren(e, keys) {
  * expect(element.footer().heading()).toExist();
  * expect(element.footer().content()).toExist();
  * expect(element.footer().content().innerSpan()).toExist();
- * expect(element.footer().spans().length).toBe(2);
+ * expect(element.footer().spans()).toHaveLength(2);
  *
  *
  * @param {Object} element
@@ -446,17 +446,23 @@ function extendedElementWithChildren(e, keys) {
  */
 function addSelectors(element, selectors) {
 
-  function setPropertyIfUndefined(obj, prop, value) {
-    if (!angular.isDefined(obj[prop])) {
-      obj[prop] = value;
+  function checkAndSetFn(obj, prop, fn) {
+    var property = obj[prop];
+    if (angular.isDefined(property)) {
+      if (!(angular.isFunction(property) && property.name === 'moxExtendElement')) {
+        throw Error('Property ' + prop + ' already defined on element');
+      }
+    } else {
+      obj[prop] = fn;
     }
   }
+
   function addChildFn(element, children) {
     angular.forEach(children, function (child, idx) {
       var name = angular.isObject(child) ? child.name : child,
         sub = child.sub;
 
-      setPropertyIfUndefined(element, name, function () {
+      checkAndSetFn(element, name, function moxExtendElement() {
         var childElement = element.children().eq(idx);
         addSelectors(childElement, sub);
         return childElement;
@@ -464,24 +470,26 @@ function addSelectors(element, selectors) {
     });
   }
 
+  function findElement(element, selector, args) {
+    if (selector) {
+      var replacedSelector = selector.replace(/{(\d+)}/g, function (match, group) {
+        return args[group];
+      });
+      return element.find(replacedSelector);
+    }
+    return element.clone();
+  }
+
   angular.forEach(selectors, function (value, key) {
     var selector = angular.isObject(value) ? value.selector : value,
       sub = value.sub,
       children = value.children;
 
-    setPropertyIfUndefined(element, key, function () {
-      var args = arguments, childElement;
-      if (selector) {
-        var replacedSelector = selector.replace(/{(\d+)}/g, function (match, group) {
-          return args[group];
-        });
-        childElement = element.find(replacedSelector);
-      } else {
-        childElement = element;
-      }
-      addSelectors(childElement, sub);
-      addChildFn(childElement, children);
-      return childElement;
+    checkAndSetFn(element, key, function moxExtendElement() {
+      var foundElement = findElement(element, selector, arguments);
+      addSelectors(foundElement, sub);
+      addChildFn(foundElement, children);
+      return foundElement;
     });
   });
 
