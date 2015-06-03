@@ -446,17 +446,23 @@ function extendedElementWithChildren(e, keys) {
  */
 function addSelectors(element, selectors) {
 
-  function setPropertyIfUndefined(obj, prop, value) {
-    if (!angular.isDefined(obj[prop])) {
-      obj[prop] = value;
+  function checkAndSetFn(obj, prop, fn) {
+    var property = obj[prop];
+    if (angular.isDefined(property)) {
+      if (!(angular.isFunction(property) && property.name === 'moxExtendElement')) {
+        throw Error('Property ' + prop + ' already defined on element');
+      }
+    } else {
+      obj[prop] = fn;
     }
   }
+
   function addChildFn(element, children) {
     angular.forEach(children, function (child, idx) {
       var name = angular.isObject(child) ? child.name : child,
         sub = child.sub;
 
-      setPropertyIfUndefined(element, name, function () {
+      checkAndSetFn(element, name, function moxExtendElement() {
         var childElement = element.children().eq(idx);
         addSelectors(childElement, sub);
         return childElement;
@@ -479,7 +485,7 @@ function addSelectors(element, selectors) {
       sub = value.sub,
       children = value.children;
 
-    setPropertyIfUndefined(element, key, function () {
+    checkAndSetFn(element, key, function moxExtendElement() {
       var foundElement = findElement(element, selector, arguments);
       addSelectors(foundElement, sub);
       addChildFn(foundElement, children);

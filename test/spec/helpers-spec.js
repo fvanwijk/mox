@@ -196,7 +196,14 @@ describe('The helper functions', function () {
                   subChild: 'child',
                   noMatch: 'element'
                 }
+              },
+              noMatch: {
+                selector: '#3',
+                sub: {
+                  noMatch: 'element'
+                }
               }
+
             }
           }
         });
@@ -204,6 +211,7 @@ describe('The helper functions', function () {
         expect(element.withSub().id1()).toExist();
         expect(element.withSub().id1().subChild()).toExist();
         expect(element.withSub().id1().noMatch()).not.toExist();
+        expect(element.withSub().noMatch().noMatch()).not.toExist();
       });
 
       it('should add simple child selectors', function () {
@@ -270,13 +278,30 @@ describe('The helper functions', function () {
         expect(element.group2().element()).toHaveAttr('id', '2');
       });
 
-      it('should not overwrite any existing properties on the element', function () {
-        expect(element.val).toBeDefined();
-        var val = element.val;
+      it('should allow overwriting existing selector functions on the element', function () {
+        expect(element.root).toBeUndefined();
         addSelectors(element, {
-          val: 'element'
+          element: '#1'
         });
-        expect(element.val).toBe(val);
+        addSelectors(element, {
+          element: '#2'
+        });
+        expect(element.element()).toHaveAttr('id', '1');
+      });
+
+      it('should throw an exception when trying to overwrite existing properties on the element', function () {
+        expect(function() {
+          addSelectors(element, {
+            val: 'element'
+          });
+        }).toThrow();
+
+        element.abc = '1';
+        expect(function() {
+          addSelectors(element, {
+            abc: 'element'
+          });
+        }).toThrow();
       });
     });
   });
