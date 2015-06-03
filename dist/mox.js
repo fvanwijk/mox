@@ -448,12 +448,10 @@ function addSelectors(element, selectors) {
 
   function checkAndSetFn(obj, prop, fn) {
     var property = obj[prop];
-    if (angular.isDefined(property)) {
-      if (!(angular.isFunction(property) && property.name === 'moxExtendElement')) {
-        throw Error('Property ' + prop + ' already defined on element');
-      }
-    } else {
+    if (angular.isUndefined(property)) {
       obj[prop] = fn;
+    } else if (!(angular.isFunction(property) && property.name === 'moxExtendElement')) {
+      throw Error('Property ' + prop + ' already defined on element');
     }
   }
 
@@ -477,7 +475,7 @@ function addSelectors(element, selectors) {
       });
       return element.find(replacedSelector);
     }
-    return element.clone();
+    return angular.element(element);
   }
 
   angular.forEach(selectors, function (value, key) {
