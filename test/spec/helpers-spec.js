@@ -7,20 +7,20 @@ describe('The helper functions', function () {
 
     describe('inject()', function () {
       it('should throw an exception when the injector is not yet ready', function () {
-        expect(_.partial(injectEnv, 'x')).toThrow(Error('Sorry, cannot inject x because the injector is not ready yet. Please call mox.run() or inject()'));
+        expect(_.partial(mox.inject, 'x')).toThrow(Error('Sorry, cannot inject x because the injector is not ready yet. Please call mox.run() or inject()'));
       });
 
       describe('when there is one argument provided', function () {
         it('should return the service that is requested', function () {
           mox.module('mox').run();
-          expect(injectEnv('x')).toBe(1);
+          expect(mox.inject('x')).toBe(1);
         });
       });
 
       describe('when there are multiple arguments provided', function () {
         it('should return an object containing the services that are requested', function () {
           mox.module('mox').run();
-          expect(injectEnv('x', 'y')).toEqual({
+          expect(mox.inject('x', 'y')).toEqual({
             x: 1,
             y: 2
           });

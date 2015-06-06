@@ -39,6 +39,24 @@ function MoxBuilder() {
   this.get = {}; // Cache for mocked things
 
   /**
+   * Injects one or multiple services and returns them
+   *
+   * @param {string} name of the inject to get
+   * @returns {Object}
+   */
+  this.inject = function inject(name) {
+    if (!currentSpec.$injector) {
+      throw Error('Sorry, cannot inject ' + name + ' because the injector is not ready yet. Please call mox.run() or inject()');
+    }
+    var args = Array.prototype.slice.call(arguments, 0);
+    var injects = {};
+    angular.forEach(args, function (injectName) {
+      injects[injectName] = currentSpec.$injector.get(injectName);
+    });
+    return args.length === 1 ? injects[name] : injects;
+  };
+
+  /**
    * Saves modules or module config functions to be passed to angular.mocks.module when .run() is called.
    *
    * @returns {Object}

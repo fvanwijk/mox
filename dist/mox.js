@@ -17,21 +17,6 @@ if (typeof beforeAll !== 'undefined')  {
 }
 
 /**
- * Injects a service.
- * If the injector is not yet initialized, it will be initialized. This has as side effect that the module config
- * functions are called.
- *
- * @param {string} name of the inject to get
- * @returns service
- */
-function injectEnv(name) {
-  if (!currentSpec.$injector) {
-    throw Error('Sorry, cannot inject ' + name + ' because the injector is not ready yet. Please call mox.run() or inject()');
-  }
-  return currentSpec.$injector.get(name);
-}
-
-/**
  * Copies input. When input seems to be JSON data, it is fastcopied.
  *
  * @param {*} input
@@ -55,7 +40,7 @@ function copy(input) {
  * @returns {Object}
  */
 function createScope(params) {
-  var $scope = injectEnv('$rootScope').$new();
+  var $scope = mox.inject('$rootScope').$new();
   if (params) {
     angular.extend($scope, params);
   }
@@ -72,7 +57,7 @@ function createScope(params) {
  * @returns {*}
  */
 function createController(ctrlName, $scope, locals) {
-  return injectEnv('$controller')(ctrlName, angular.extend({ $scope: $scope || currentSpec.$scope }, locals || {}));
+  return mox.inject('$controller')(ctrlName, angular.extend({ $scope: $scope || currentSpec.$scope }, locals || {}));
 }
 
 /**
@@ -143,7 +128,7 @@ function compileHtml(html, $scope, appendToBody) {
   $scope = $scope || currentSpec.$scope;
   if (appendToBody === undefined) { appendToBody = true; }
 
-  var element = injectEnv('$compile')(html)($scope);
+  var element = mox.inject('$compile')(html)($scope);
   if (appendToBody) {
     if (mox.testTemplatePath && mox.testTemplateAppendSelector) {
       jasmine.getFixtures().load(mox.testTemplatePath);
@@ -167,7 +152,7 @@ function compileHtml(html, $scope, appendToBody) {
  * @returns the created element
  */
 function compileTemplate(template, $scope, appendToBody) {
-  var html = injectEnv('$templateCache').get(template);
+  var html = mox.inject('$templateCache').get(template);
   return compileHtml('<div>' + html + '</div>', $scope, appendToBody);
 }
 
@@ -185,7 +170,7 @@ function compileTemplate(template, $scope, appendToBody) {
  */
 function compileHtmlOnDom(html, $scope) {
   var element = compileHtml(html, $scope);
-  var body = injectEnv('$document').find('body');
+  var body = mox.inject('$document').find('body');
 
   var containerId = 'test-input-container';
   var findElementContainer = function () {
@@ -206,7 +191,7 @@ function compileHtmlOnDom(html, $scope) {
  * @deprecated
  */
 function removeCompiledHtmlFromDom() {
-  return injectEnv('$document').find('body').find('#test-input-container').remove();
+  return mox.inject('$document').find('body').find('#test-input-container').remove();
 }
 
 /*********************
@@ -214,16 +199,16 @@ function removeCompiledHtmlFromDom() {
  *********************/
 
 function defer() {
-  return injectEnv('$q').defer();
+  return mox.inject('$q').defer();
 }
 
 function when() {
   /* jshint -W040 */
-  return injectEnv('$q').when.apply(this, arguments);
+  return mox.inject('$q').when.apply(this, arguments);
 }
 
 function all() {
-  return injectEnv('$q').all.apply(this, arguments);
+  return mox.inject('$q').all.apply(this, arguments);
 }
 
 function unresolvedPromise() {
@@ -237,7 +222,7 @@ function promise(result, dontCopy) {
 }
 
 function restangularPromise(result) {
-  return injectEnv('$q').when(angular.copy(result));
+  return mox.inject('$q').when(angular.copy(result));
 }
 
 /**
@@ -250,7 +235,7 @@ function resourcePromise(result) {
 }
 
 function reject(error) {
-  return injectEnv('$q').reject(error);
+  return mox.inject('$q').reject(error);
 }
 
 /**
@@ -590,7 +575,7 @@ function requestTest() {
 
   test.run = function run() {
     test._response = test._response || {};
-    injectEnv('$httpBackend').expect(test._httpMethod, { test: validateUrl }, test._data).respond(test._response);
+    mox.inject('$httpBackend').expect(test._httpMethod, { test: validateUrl }, test._data).respond(test._response);
 
     var response = test._method.apply(this, test._methodArguments);
     var promise = response.$promise || response;
@@ -603,11 +588,11 @@ function requestTest() {
         .then(successCallback)
         .catch(failureCallback);
 
-      injectEnv('$httpBackend').flush();
+      mox.inject('$httpBackend').flush();
 
       test._expectedResult((test._expectFail ? failureCallback : successCallback).mostRecentCall.args[0]);
     } else {
-      injectEnv('$httpBackend').flush();
+      mox.inject('$httpBackend').flush();
 
       if (test._expectFail) {
         expect(promise).toReject();
@@ -660,6 +645,26 @@ function MoxBuilder() {
 
   this.factories = moxConfig; // Factory functions for creating mocks
   this.get = {}; // Cache for mocked things
+
+  /**
+   * Injects a service.
+   * If the injector is not yet initialized, it will be initialized. This has as side effect that the module config
+   * functions are called.
+   *
+   * @param {string} name of the inject to get
+   * @returns {Object}
+   */
+  this.inject = function inject(name) {
+    if (!currentSpec.$injector) {
+      throw Error('Sorry, cannot inject ' + name + ' because the injector is not ready yet. Please call mox.run() or inject()');
+    }
+    var args = Array.prototype.slice.call(arguments, 0);
+    var injects = {};
+    angular.forEach(args, function (injectName) {
+      injects[injectName] = currentSpec.$injector.get(injectName);
+    });
+    return args.length === 1 ? injects[name] : injects;
+  };
 
   /**
    * Saves modules or module config functions to be passed to angular.mocks.module when .run() is called.
@@ -853,7 +858,7 @@ function MoxBuilder() {
     var templates = arguments;
 
     postInjectFns.push(function () {
-      var $templateCache = injectEnv('$templateCache');
+      var $templateCache = mox.inject('$templateCache');
       angular.forEach(templates, function (templateConfig) {
         var path;
         var template;
