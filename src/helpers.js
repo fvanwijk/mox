@@ -22,13 +22,18 @@ if (typeof beforeAll !== 'undefined')  {
  * functions are called.
  *
  * @param {string} name of the inject to get
- * @returns service
+ * @returns {Object}
  */
 function injectEnv(name) {
   if (!currentSpec.$injector) {
     throw Error('Sorry, cannot inject ' + name + ' because the injector is not ready yet. Please call mox.run() or inject()');
   }
-  return currentSpec.$injector.get(name);
+  var args = Array.prototype.slice.call(arguments, 0);
+  var injects = {};
+  angular.forEach(args, function (injectName) {
+    injects[injectName] = currentSpec.$injector.get(injectName);
+  });
+  return args.length === 1 ? injects[name] : injects;
 }
 
 /**

@@ -1,5 +1,34 @@
 describe('The helper functions', function () {
 
+  describe('Test helpers', function () {
+    beforeEach(function () {
+      angular.module('mox').value('x', 1).value('y', 2);
+    });
+
+    describe('inject()', function () {
+      it('should throw an exception when the injector is not yet ready', function () {
+        expect(_.partial(injectEnv, 'x')).toThrow(Error('Sorry, cannot inject x because the injector is not ready yet. Please call mox.run() or inject()'));
+      });
+
+      describe('when there is one argument provided', function () {
+        it('should return the service that is requested', function () {
+          mox.module('mox').run();
+          expect(injectEnv('x')).toBe(1);
+        });
+      });
+
+      describe('when there are multiple arguments provided', function () {
+        it('should return an object containing the services that are requested', function () {
+          mox.module('mox').run();
+          expect(injectEnv('x', 'y')).toEqual({
+            x: 1,
+            y: 2
+          });
+        });
+      });
+    });
+  });
+
   describe('Angular shortcuts', function () {
     describe('createScope()', function () {
       beforeEach(function () {
