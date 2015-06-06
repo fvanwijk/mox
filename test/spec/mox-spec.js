@@ -1,7 +1,9 @@
 describe('The Mox library', function () {
 
   beforeEach(function () {
-    angular.module('test', []);
+    angular.module('test', ['test1a'])
+      .constant('constant', 'c1');
+    angular.module('test1a', []);
     angular.module('test2', []);
   });
 
@@ -20,5 +22,16 @@ describe('The Mox library', function () {
       expect(angular.mock.inject).toHaveBeenCalled();
     });
 
+  });
+
+  describe('mockConstants()', function () {
+    it('should mock a constant which is mocked for the same module as the original constant', function () {
+      mox
+        .module('test')
+        .mockConstants('constant', 'newConstant')
+        .run();
+
+      expect(mox.inject('constant')).toEqual('newConstant');
+    });
   });
 });
