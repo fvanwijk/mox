@@ -70,10 +70,10 @@ module.exports = function (grunt) {
       dist: {
         options: {
           thresholds: {
-            statements: 27,
-            branches: 17,
-            functions: 10,
-            lines: 27
+            statements: 39,
+            branches: 32,
+            functions: 25,
+            lines: 39
           },
           dir: 'coverage',
           root: '<%= paths.test %>'
