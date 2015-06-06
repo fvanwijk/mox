@@ -28,6 +28,7 @@
     "angular": "1.2.21"
   },
   "devDependencies": {
+    "lodash": "3.8.0",
     "angular-mocks": "1.2.21",
     "jasmine-jquery": "~2.1.0"
   }
