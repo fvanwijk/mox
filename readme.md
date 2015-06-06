@@ -19,14 +19,14 @@ files: [
 ...
 ],
 ```
-    
+
 ## Full usage example
 
 ```javascript
 describe('Example of Mox', function () {
 
   beforeEach(function() {
-  
+
     mox
       .module(
         'myApp',
@@ -68,28 +68,28 @@ describe('Example of Mox', function () {
       )
       .mockControllers('ChildController')
       .run();
-      
+
     createScope();
     createController('FootController');
-    
+
     it('should do something', inject(function (FooService) {
-      
+
       expect(this.$scope.foo).toBe('bar');
       expect(FooService).toBe(mox.get.FooService);
       expect(FooService.getBars()).toEqual(['barData1', 'barData2']);
-      
+
       var translation = FooService.getTranslation('fooTitle');
-      
+
       expect(FooService.getTranslation).toHaveBeenCalledWith('fooTitle');
       expect(translation).toBe('mockTitle');
-      
+
     });
-    
+
   });
 
 });
 ```
-      
+
 ## Mox registration methods
 
 ### mox.inject()
@@ -155,7 +155,7 @@ One constant:
 ```javascript
 mox.mockConstant('FooConstant', 'value')
 ```
-    
+
 Multiple constants:
 
 ```javascript
@@ -249,7 +249,7 @@ mox.mockTemplates(
   { 'scripts/views/anotherTemplate.html': '<tr><td></td></tr>' }
 )
 ```
-    
+
 Or just one template:
 
 ```javascript
@@ -261,7 +261,7 @@ Or:
 ```javascript
 mox.mockTemplate({ 'scripts/views/anotherTemplate.html': '<tr><td></td></tr>' });
 ```
-    
+
 ## Static methods/properties
 
 ### mox.save()
@@ -345,7 +345,7 @@ will be copied before resolving.
 * `restangularPromise`: returns a promise using `$q.when`
 * `reject(message)`: returns a rejecting promise.
 * `resourceResult(result, mock)`: returns a resource result with a resolving promise - `{ $promise: resultPromise }`.
-If you provide a mock, the functions of this mock are copied to the result as $-methods. 
+If you provide a mock, the functions of this mock are copied to the result as $-methods.
 * `rejectingResourceResult` and `nonResolvingResourceResult` return resource results with rejecting or empty promises.
 
 ### addSelectors
@@ -366,6 +366,20 @@ Example template:
     <div id="num-1-1">Test 1</div>
     <div id="num-2-1">Test 2</div>
     <div id="num-2-2">Test 3</div>
+    <table>
+      <tbody>
+        <tr>
+          <td>Alice</td>
+          <td>54</td>
+          <td>Blue</td>
+        </tr>
+        <tr>
+          <td>Bob</td>
+          <td>54</td>
+          <td>Grey</td>
+        </tr>
+      </tbody>
+    </table>
   </div>
   <div id="footer">
     <h3>Footer <span>title</span></h3>
@@ -392,6 +406,10 @@ addSelectors(element, {
       },
       num: '[id="num-{0}-{1}"]'          // parameter placeholders can be used
     }
+  },
+  resultsRows: {
+    repeater: 'tbody > tr',
+    children: ['name', 'age', 'eyeColor']
   },
   footer: {
     selector: '#footer',
@@ -423,6 +441,11 @@ expect(element.body().bar().highlight()).toExist();
 expect(element.body().num(1, 1)).toExist();
 expect(element.body().num(2, 1)).toExist();
 expect(element.body().num(2, 2)).toExist();
+
+expect(element.resultRows()).toHaveLength(2);
+expect(element.resultRows(0).name()).toExist();
+expect(element.resultRows(0).age()).toExist();
+expect(element.resultRows(0).eyeColor()).toExist();
 
 expect(element.footer()).toExist();
 expect(element.footer().heading()).toExist();

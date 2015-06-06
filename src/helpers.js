@@ -453,25 +453,32 @@ function addSelectors(element, selectors) {
     });
   }
 
-  function findElement(element, selector, args) {
-    if (selector) {
-      var replacedSelector = selector.replace(/{(\d+)}/g, function (match, group) {
-        return args[group];
-      });
-      return element.find(replacedSelector);
+  function findElement(element, value, args) {
+    if (value) {
+      if (angular.isString(value) || value.selector) {
+        var replacedSelector = (value.selector || value).replace(/{(\d+)}/g, function (match, group) {
+          return args[group];
+        });
+        return element.find(replacedSelector);
+      } else if (value.repeater) {
+        var elements = element.find(value.repeater);
+        return angular.isDefined(args[0]) ? elements.eq(args[0]) : elements;
+      }
     }
     return angular.element(element);
   }
 
   angular.forEach(selectors, function (value, key) {
-    var selector = angular.isObject(value) ? value.selector : value,
-      sub = value.sub,
-      children = value.children;
+    var
+      children = value.children,
+      sub = value.sub;
 
     checkAndSetFn(element, key, function moxExtendElement() {
-      var foundElement = findElement(element, selector, arguments);
-      addSelectors(foundElement, sub);
-      addChildFn(foundElement, children);
+      var foundElement = findElement(element, value, arguments);
+      if (!value.repeater || angular.isDefined(arguments[0])) {
+        addSelectors(foundElement, sub);
+        addChildFn(foundElement, children);
+      }
       return foundElement;
     });
   });
