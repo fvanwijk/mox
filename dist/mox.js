@@ -612,7 +612,7 @@ function requestTest() {
 function MoxBuilder() {
 
   var
-    moduleName,
+    moduleNames,
     moduleFns,
     postInjectFns;
 
@@ -630,7 +630,7 @@ function MoxBuilder() {
    * Reset the queues of moduleFns and postInejctFns so that next mox usage starts with a fresh new setup
    */
   function cleanUp() {
-    moduleName = undefined;
+    moduleNames = [];
     moduleFns = [];
     postInjectFns = [];
   }
@@ -647,9 +647,7 @@ function MoxBuilder() {
   this.get = {}; // Cache for mocked things
 
   /**
-   * Injects a service.
-   * If the injector is not yet initialized, it will be initialized. This has as side effect that the module config
-   * functions are called.
+   * Injects one or multiple services and returns them
    *
    * @param {string} name of the inject to get
    * @returns {Object}
@@ -672,8 +670,14 @@ function MoxBuilder() {
    * @returns {Object}
    */
   this.module = function module() {
-    moduleName = arguments[0];
-    moduleFns = moduleFns.concat(Array.prototype.slice.call(arguments, 0));
+    var args = Array.prototype.slice.call(arguments, 0);
+    angular.forEach(args, function (arg) {
+      if (angular.isString(arg)) {
+        moduleNames.push(arg);
+      }
+    });
+
+    moduleFns = moduleFns.concat(args);
 
     return this;
   };
@@ -706,7 +710,7 @@ function MoxBuilder() {
     var mockNames = arguments;
 
     moduleFns.push(function mockServicesFn($provide) {
-      var injector = angular.injector(['ng', 'ngMock', moduleName]);
+      var injector = angular.injector(['ng', 'ngMock'].concat(moduleNames));
 
       angular.forEach(mockNames, function (mockName) {
         var mockArgs;
