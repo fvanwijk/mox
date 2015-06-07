@@ -7,85 +7,100 @@
 When it comes to unit tests, normally a lot of boilerplate code is written to set up the mocks. This library consists of
 some utility functions to set up mocks very fast and have total control of the scope of your tests.
 
-NB: Sorry, no full Jasmine 2 support yet!
-
 ## Usage
 Copy moxConfig.js to your project test folder. Put mox.js and moxConfig.js in your karma.conf.js file list, is this order:
 
-    files: [
-    ...
-      'bower_components/jasmine-mox-matchers/src/jasmine-mox-matchers-1.x.js' // or 2.x if you are using Jasmine 2
-      'bower_components/mox/mox.js',
-      'test/moxConfig.js',
-    ...
-    ],
+```javascript
+files: [
+...
+  'bower_components/jasmine-mox-matchers/src/jasmine-mox-matchers.js' // or dist/jasmine-mox-matchers.min.js
+  'bower_components/mox/dist/mox.js', // Or mox.min.js
+  'test/moxConfig.js',
+...
+],
+```
     
 ## Full usage example
 
-    describe('Example of Mox', function () {
-    
-      beforeEach(function() {
+```javascript
+describe('Example of Mox', function () {
+
+  beforeEach(function() {
+  
+    mox
+      .module(
+        'myApp',
+        function ($provide) {
+          // Custom module config function
+          $provide.constant('yolo', 'swag');
+        }
+      )
+      .mockServices(
+        'FooService',
+        'barFilter'
+      )
+      .mockConstants({
+        fooConstant: value
+      })
+      .mockDirectives(
+        'bazDirective',
+        {
+          name: 'yoloDirective',
+          template: '<div>Custom directive template</div>',
+          link: function customLinkFn() { }
+        }
+      )
+      .disableDirectives(
+        'fooDirective'
+      )
+      .setupResults({
+        fooService: {
+          getBars: ['barData1', 'barData2'],
+          getTranslation: function (key) {
+            return key == 'fooTitle' ? 'mock title';
+          }
+        },
+        barFilter: 'mock filter result' // Object not allowed as return value
+      })
+      .mockTemplates(
+        'scripts/views/template1.html',
+        'scripts/views/template2.html',
+      )
+      .mockControllers('ChildController')
+      .run();
       
-        mox
-          .module(
-            'myApp',
-            function ($provide) {
-              // Custom module config function
-              $provide.constant('yolo', 'swag');
-            }
-          )
-          .mockServices(
-            'FooService',
-            'barFilter'
-          )
-          .mockConstants({
-            fooConstant: value
-          })
-          .mockDirectives([
-            'bazDirective',
-            {
-              name: 'yoloDirective',
-              priority: 0,
-              restrict: 'EAC',
-              scope: { firstScopeVar: '=', secondScopeVar: '@' }
-              template: '<div>Custom directive template</div>'
-            }
-          ])
-          .disableDirectives([
-            'fooDirective'
-          ])
-          .setupResults({
-            fooService: {
-              getBars: ['barData1', 'barData2'],
-              getTranslation: function (key) {
-                return key == 'fooTitle' ? 'mock title';
-              }
-            },
-            barFilter: 'mock filter result' // Object not allowed as return value
-          })
-          .mockTemplates([
-            'scripts/views/template1.html',
-            'scripts/views/template2.html',
-          ])
-          .run();
-        
-        it('should do something', inject(function (FooService) {
-          
-          expect(FooService).toBe(mox.get.FooService);
-          expect(FooService.getBars()).toEqual(['barData1', 'barData2']);
-          
-          var translation = FooService.getTranslation('fooTitle');
-          
-          expect(FooService.getTranslation).toHaveBeenCalledWith('fooTitle');
-          expect(translation).toBe('mockTitle');
-          
-        });
-        
-      });
+    createScope();
+    createController('FootController');
     
+    it('should do something', inject(function (FooService) {
+      
+      expect(this.$scope.foo).toBe('bar');
+      expect(FooService).toBe(mox.get.FooService);
+      expect(FooService.getBars()).toEqual(['barData1', 'barData2']);
+      
+      var translation = FooService.getTranslation('fooTitle');
+      
+      expect(FooService.getTranslation).toHaveBeenCalledWith('fooTitle');
+      expect(translation).toBe('mockTitle');
+      
     });
+    
+  });
+
+});
+```
       
 ## Mox registration methods
+
+### mox.inject()
+
+Inject services without having to create a `inject(function(FooService) { })` wrapper. Mocks can also be injected this way,
+but for convenience you can access mocks using `mox.get.FooService`.
+
+```javascript
+var fooService = inject('FooService');
+var services = inject('FooService', 'BarService'); // { FooService: ..., BarService: ... }
+```
 
 ### mox.module()
 
@@ -93,6 +108,12 @@ Sets up the module, just like [module()](https://docs.angularjs.org/api/ngMock/f
 Pass module names, config functions or objects. The passed arguments are executed when `run()` is called.
 
 Returns the Mox instance to make chaining possible.
+
+```javascript
+mox.module('foo', function ($provide) {
+  $provide.constant('foo', 'bar');
+})
+```
 
 ### mox.mockServices()
 
@@ -109,14 +130,18 @@ The following mocks are created:
 
 One service:
 
-    mox.mockServices('FooResource')
+```javascript
+mox.mockServices('FooResource')
+```
 
 Multiple services:
 
-    mox.mockServices([
-       'fooResource',
-       'barService'
-    ])
+```javascript
+mox.mockServices(
+   'fooResource',
+   'barService'
+)
+```
 
 Returns the Mox instance to make chaining possible.
 
@@ -127,23 +152,33 @@ Pass a name and value as parameters for one constant, or an object with definiti
 
 One constant:
 
-    mox.mockConstant('FooConstant', 'value')
+```javascript
+mox.mockConstant('FooConstant', 'value')
+```
     
 Multiple constants:
 
-    mox.mockConstant({
-      FooConstant: value,
-      BarConstant: anotherValue
-    })
+```javascript
+mox.mockConstant({
+  FooConstant: value,
+  BarConstant: anotherValue
+})
+```
 
 ### mox.mockDirectives()
 
-Register directive(s) to be mocked.
+Register directive(s) to be mocked. The mock will be an empty directive with the same isolate scope as the original directive,
+so the isolate scope of the directive can be tested:
+
+```javascript
+compiledElement.find('[directive-name]').toContainIsolateScope({ key: value });
+```
 
 Accepts 3 types of input:
-
 1. a directive name: the same as with an array, but just for one directive
-2. a directive factory object, for you won mock implementation (name property is required)
+2. a directive factory object, for your own mock implementation.
+  - name property is required
+  - scope, priority and restrict properties are not overwritable
 3. an array of directive names (see 1) or objects (see 2)
 
 Returns the Mox instance to make chaining possible.
@@ -160,7 +195,9 @@ Returns the Mox instance to make chaining possible.
 Registers controllers to be mocked. This is useful for view specs where the template contains an `ng-controller`.
 The view's `$scope` is not set by the controller anymore, but you have to set the `$scope` manually.
 
-    mox.mockControllers('FooController')
+```javascript
+mox.mockControllers('FooController')
+```
 
 Returns the Mox instance to make chaining possible.
 
@@ -170,11 +207,13 @@ Executes all registered stuff so that the actual mocking is done. If you forget 
 The real services will be overwritten by mocks via `$provide.value`, so when you inject `FooService`, you get the mocked service, including
 spies on all methods.
 
-As bonus, the mocks are added to the `mox.get` object, so that you can access mocks easily in your specs without an ugly `inject(function() {})` wrapper.
+As bonus, the mocks are added to the `mox.get` object, so that you can access mocks easily in your specs without having to inject them.
 
 Returns the result of angular.mocks.module`, so that the call can passed as argument to `beforeEach`. So chaining is not possible after `run()`.
 
-    beforeEach(mox.module('myApp').run());
+```javascript
+beforeEach(mox.module('myApp').run());
+```
 
 ## Mox configuration methods
 
@@ -183,16 +222,18 @@ Returns the result of angular.mocks.module`, so that the call can passed as argu
 Pass an object with a configuration for the spy functions of the already registered mocks.
 If the value is a function, it will be set using Jasmine's `andCallFake()`, otherwise it uses `andReturn`
 
-    mox.setupResults({
-      fooService: {
-        getBars: ['barData1', 'barData2'],
-        getTranslation: function (key) {
-          return key == 'fooTitle' ? 'mock title' : 'mock other string';
-        }
-      },
-      barFilter: 'mock filter result' // Object not allowed as return value
-    });
-  
+```javascript
+mox.setupResults({
+  fooService: {
+    getBars: ['barData1', 'barData2'],
+    getTranslation: function (key) {
+      return key == 'fooTitle' ? 'mock title' : 'mock other string';
+    }
+  },
+  barFilter: 'mock filter result' // Object not allowed as return value
+});
+```
+
 ### mox.mockTemplates()
 
 Replaces templates with a mock template: `<div>This is a mock for views/templatename.html</div>` or a custom template.
@@ -202,18 +243,24 @@ separate view spec.
 Note that this method is not called in the chain that ends with `run()`. This is because `mockTemplates` needs the injector
 to already be initialized, which is done after calling `run()`.
 
-    mox.mockTemplates([
-      'scripts/views/templatename.html',
-      { 'scripts/views/anotherTemplate.html': '<tr><td></td></tr>' }
-    ])
+```javascript
+mox.mockTemplates(
+  'scripts/views/templatename.html',
+  { 'scripts/views/anotherTemplate.html': '<tr><td></td></tr>' }
+)
+```
     
 Or just one template:
 
-    mox.mockTemplates('scripts/views/templatename.html');
-    
+```javascript
+mox.mockTemplates('scripts/views/templatename.html');
+```
+
 Or:
 
-    mox.mockTemplate({ 'scripts/views/anotherTemplate.html': '<tr><td></td></tr>' });
+```javascript
+mox.mockTemplate({ 'scripts/views/anotherTemplate.html': '<tr><td></td></tr>' });
+```
     
 ## Static methods/properties
 
@@ -222,7 +269,9 @@ Or:
 Registers a mock and save it to the cache.
 This method usually is used when defining a custom mock factory function or when manually creating a mock.
 
-    mox.save($provide, 'FooService', fooServiceMock);
+```javascript
+mox.save($provide, 'FooService', fooServiceMock);
+```
 
 Returns the saved mock.
 
@@ -230,25 +279,31 @@ Returns the saved mock.
 
 When a mock is registered, you can get the mock without injecting it.
 
-    var fooService = mox.get.FooService;
-    
+```javascript
+var fooService = mox.get.FooService;
+```
+
 ### mox.factories
 
 Call a mock factory function manually without chaining via `mox`.
 The factory functions needs to be defined in moxConfig.
-    
-    mox.factories.FooServices($provide);
-    
+
+```javascript
+mox.factories.FooServices($provide);
+```
+
 ## Testing a $resource
 
 Setting up a resource test normally involves a lot of boilerplate code, like injecting $httpBackend, flushing, etc.
 With Mox you can test a resource in 5 lines of code or less.
 
-    requestTest()
-      .whenMethod(FooResource.query, { bar: baz })
-      .expectGet('api/foo?bar=baz')
-      .andRespond([])
-      .run();
+```javascript
+requestTest()
+  .whenMethod(FooResource.query, { bar: baz })
+  .expectGet('api/foo?bar=baz')
+  .andRespond([])
+  .run();
+```
 
 When you test a resource that returns an object, such as `get()`, `andRespond({})` is not necessary, since
 `requestTest()` responds with `{}` by default.
@@ -263,20 +318,21 @@ Finally this framework contains a lot of utility functions:
 
 ### Generic shortcuts for specs
 
-* `createScope`: Creates a new $rootScope child. The optional passed argument is an object 
-* `createController(controllerName)`: Creates and initialized a controller
+* `createScope`: Creates a new $rootScope child. The optional passed argument is an object. Also sets the created scope on the current spec.
+* `createController(controllerName)`: Creates and initialized a controller.
 * `getMockData(fileName)`: Asynchronously loads the contents of a JSON file. The argument is a path without '.json'.
 
 ### Compile shortcuts
 
 * `compileTemplate(path, $scope)`: Returns a compiled and linked template and digest the $scope.
 * `compileHtml(html, $scope)`: Returns compiled and linked HTML and digest the $scope. Useful for directives.
-* `compileHtmlOnDom(html)`: Compiles given html on the actual browser's DOM using window.document instead of an isolated tree.
-The regular compileHtml() function is preferred as it's faster and does not require manual cleanup.
-Only use this function when you cannot trigger browser behaviour using compileHtml().
 
-Be sure to clean up the generated HTML afterwards by calling removeCompiledHtmlFromDom() in an afterEach.
-* `removeCompiledHtmlFromDom`: Removes the html that was created using `compileHtmlOnDom()` from the DOM.
+The compiled element is appended to the document body and is removed in between each spec.
+When you set `mox.testTemplatePath`, a the specified template is appended to the body first and the compiled element is
+appended to the element which can be found using the CSS selector in `mox.testTemplateAppendSelector`.
+
+When no scope is provided, it tries to use `this.$scope` which is set by `createScope()`.
+The compiled element is set on the current spec.
 
 ### Promise shortcuts
 
@@ -292,11 +348,6 @@ will be copied before resolving.
 If you provide a mock, the functions of this mock are copied to the result as $-methods. 
 * `rejectingResourceResult` and `nonResolvingResourceResult` return resource results with rejecting or empty promises.
 
-### extendElement
-
-Extends the element with function to be called on that element. The only extended function currently is `findByBinding`
-which traverses that childNodes to find an element with the given binding. It mimics the Protractor findBindings / by.binding.
-
 ### addSelectors
 
 Adds helper functions to an element that simplify element selections.
@@ -304,80 +355,86 @@ The selection is only performed when the generated helper functions are called, 
 
 Example template:
 
-    <div>
-      <div id="header"></div>
-      <div id="body">
-        <div class="foo">Foo</div>
-        <div data-test="bar">
-          Bar <span class="hl">something</span>
-        </div>
-        <div id="num-1-1">Test 1</div>
-        <div id="num-2-1">Test 2</div>
-        <div id="num-2-2">Test 3</div>
-      </div>
-      <div id="footer">
-        <h3>Footer <span>title</span></h3>
-        <div>Footer <span>content</span></div>
-      </div>
+```html
+<div>
+  <div id="header"></div>
+  <div id="body">
+    <div class="foo">Foo</div>
+    <div data-test="bar">
+      Bar <span class="hl">something</span>
     </div>
+    <div id="num-1-1">Test 1</div>
+    <div id="num-2-1">Test 2</div>
+    <div id="num-2-2">Test 3</div>
+  </div>
+  <div id="footer">
+    <h3>Footer <span>title</span></h3>
+    <div>Footer <span>content</span></div>
+  </div>
+</div>
+```
 
 Test initialisation:
 
-    var element = compileHtml(template);
-    addSelectors(element, {
-      header: '[id="header"]',               // shorthand string notation
-      body: {                                // full object notation
-        selector: '#body',                   // element selector
-        sub: {                               // descendant selectors
-          foo: '.foo',
-          bar: {
-            selector: '[data-test="bar"]',
-            sub: {
-              highlight: '.hl'
-            }
-          },
-          num: '[id="num-{0}-{1}"]'          // parameter placeholders can be used
+```html
+var element = compileHtml(template);
+addSelectors(element, {
+  header: '[id="header"]',               // shorthand string notation
+  body: {                                // full object notation
+    selector: '#body',                   // element selector
+    sub: {                               // descendant selectors
+      foo: '.foo',
+      bar: {
+        selector: '[data-test="bar"]',
+        sub: {
+          highlight: '.hl'
         }
       },
-      footer: {
-        selector: '#footer',
-        children: [                          // shorthand for child nodes, starting from first node
-          'heading',                         // shorthand string notation
-          {                                  // full object notation
-            name: 'content',
-            sub: {
-              innerSpan: 'span'
-            }
-          }
-        ],
-        sub: {                               // sub and children can be mixed
-          spans: 'span'                      // (as long as they don't overlap)
+      num: '[id="num-{0}-{1}"]'          // parameter placeholders can be used
+    }
+  },
+  footer: {
+    selector: '#footer',
+    children: [                          // shorthand for child nodes, starting from first node
+      'heading',                         // shorthand string notation
+      {                                  // full object notation
+        name: 'content',
+        sub: {
+          innerSpan: 'span'
         }
       }
-    });
+    ],
+    sub: {                               // sub and children can be mixed
+      spans: 'span'                      // (as long as they don't overlap)
+    }
+  }
+});
+```
 
 Test code (Jasmine-style):
 
-    expect(element.header()).toExist();
-    
-    expect(element.body()).toExist();
-    expect(element.body().foo()).toExist();
-    expect(element.body().bar()).toExist();
-    expect(element.body().bar().highlight()).toExist();
-    expect(element.body().num(1, 1)).toExist();
-    expect(element.body().num(2, 1)).toExist();
-    expect(element.body().num(2, 2)).toExist();
-    
-    expect(element.footer()).toExist();
-    expect(element.footer().heading()).toExist();
-    expect(element.footer().content()).toExist();
-    expect(element.footer().content().innerSpan()).toExist();
-    expect(element.footer().spans()).toHaveLength(2);
+```javascript
+expect(element.header()).toExist();
+
+expect(element.body()).toExist();
+expect(element.body().foo()).toExist();
+expect(element.body().bar()).toExist();
+expect(element.body().bar().highlight()).toExist();
+expect(element.body().num(1, 1)).toExist();
+expect(element.body().num(2, 1)).toExist();
+expect(element.body().num(2, 2)).toExist();
+
+expect(element.footer()).toExist();
+expect(element.footer().heading()).toExist();
+expect(element.footer().content()).toExist();
+expect(element.footer().content().innerSpan()).toExist();
+expect(element.footer().spans()).toHaveLength(2);
+```
 
 ## Contributors
 
 * [@fvanwijk](https://github.com/fvanwijk)
-* [@fwielstra](https://github.com/fwielstra)
 * [@AlbertBrand](https://github.com/AlbertBrand)
-* [@jbnicolai](https://github.com/jbnicolai)
 * [@mikewoudenberg](https://github.com/mikewoudenberg)
+* [@fwielstra](https://github.com/fwielstra)
+* [@jbnicolai](https://github.com/jbnicolai)
