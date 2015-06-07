@@ -772,7 +772,6 @@ function MoxBuilder() {
    * 1. a directive name: the same as with an array, but just for one directive
    * 2. a directive factory object, for your own mock implementation.
    *   - name property is required
-   *   - link property not supported, use compile instead
    *   - index, scope, priority and restrict properties are not overwritable
    * 3. an array of directive names (see 1) or objects (see 2)
    *
