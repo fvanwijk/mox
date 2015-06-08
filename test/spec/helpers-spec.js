@@ -332,6 +332,39 @@ describe('The helper functions', function () {
           });
         }).toThrow();
       });
+
+      it('should support repeater definitions', function () {
+        addSelectors(element, {
+          childElements: {
+            repeater: 'element > child',
+            sub: {
+              kid: 'child'
+            }
+          }
+        });
+
+        expect(element.childElements()).toHaveLength(2);
+        expect(element.childElements(0).kid()).toExist();
+        expect(element.childElements(1).kid()).not.toExist();
+      });
+
+      it('should ignore the children and sub definitions for the repeater itself', function () {
+        addSelectors(element, {
+          childElements: {
+            repeater: 'element > child',
+            sub: {
+              kid: 'child'
+            },
+            children: ['kiddo']
+          }
+        });
+
+        expect(element.childElements().kid).toBeUndefined();
+        expect(element.childElements().kiddo).toBeUndefined();
+        expect(element.childElements(0).kid).toBeDefined();
+        expect(element.childElements(0).kiddo).toBeDefined();
+
+      });
     });
   });
 });
