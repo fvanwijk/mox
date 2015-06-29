@@ -37,6 +37,7 @@ function MoxBuilder() {
 
   this.factories = moxConfig; // Factory functions for creating mocks
   this.get = {}; // Cache for mocked things
+  this.testTemplateAppendSelector = '#mox-container';
 
   /**
    * Injects one or multiple services and returns them

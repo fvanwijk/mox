@@ -120,8 +120,8 @@ function noop() {}
  *
  * @param {string} html
  * @param {Object} $scope to bind to the element. If not given, look if there is a scope created with createScope().
- * @param {boolean} appendToBody is true when the compiled html should be added to the DOM.
- *        Set mox.testTemplatePath to add a tempate to the body and append the html to the element with selector mox.testTemplateAppendSelector
+ * @param {boolean} [appendToBody] is true when the compiled html should be added to the DOM.
+ *        Set mox.testTemplatePath to add a template to the body and append the html to the element with selector mox.testTemplateAppendSelector
  * @returns the created element
  */
 function compileHtml(html, $scope, appendToBody) {
@@ -129,13 +129,11 @@ function compileHtml(html, $scope, appendToBody) {
   if (appendToBody === undefined) { appendToBody = true; }
 
   var element = mox.inject('$compile')(html)($scope);
+  var body = angular.element(document.body);
+  body.find(mox.testTemplateAppendSelector).remove();
   if (appendToBody) {
-    if (mox.testTemplatePath && mox.testTemplateAppendSelector) {
-      jasmine.getFixtures().load(mox.testTemplatePath);
-      angular.element(document.body).find(mox.testTemplateAppendSelector).append(element);
-    } else {
-      jasmine.getFixtures().set(element);
-    }
+    var testTemplate = mox.testTemplatePath ? jasmine.getFixtures().read(mox.testTemplatePath) : angular.element('<div id="mox-container">');
+    body.append(testTemplate).find(mox.testTemplateAppendSelector).append(element);
   }
 
   currentSpec.element = element;

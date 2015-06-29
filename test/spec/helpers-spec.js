@@ -116,6 +116,12 @@ describe('The helper functions', function () {
           expect(angular.element(document.body).find('#container #test')).not.toExist();
         });
 
+        it('should only append the compile element to the body once', function () {
+          compileHtml('<div id="test"></div>', createScope());
+          compileHtml('<div id="test2"></div>', createScope());
+          expect(angular.element(document.body).find('#test')).not.toExist();
+        });
+
         describe('when there is testTemplatePath and a testTemplateAppendSelector set', function () {
           beforeEach(function () {
             // See test/mock/html/container.html
