@@ -120,8 +120,8 @@ function noop() {}
  *
  * @param {string} html
  * @param {Object} $scope to bind to the element. If not given, look if there is a scope created with createScope().
- * @param {boolean} appendToBody is true when the compiled html should be added to the DOM.
- *        Set mox.testTemplatePath to add a tempate to the body and append the html to the element with selector mox.testTemplateAppendSelector
+ * @param {boolean} [appendToBody] is true when the compiled html should be added to the DOM.
+ *        Set mox.testTemplatePath to add a template to the body and append the html to the element with selector mox.testTemplateAppendSelector
  * @returns the created element
  */
 function compileHtml(html, $scope, appendToBody) {
@@ -129,13 +129,11 @@ function compileHtml(html, $scope, appendToBody) {
   if (appendToBody === undefined) { appendToBody = true; }
 
   var element = mox.inject('$compile')(html)($scope);
+  var body = angular.element(document.body);
+  body.find(mox.testTemplateAppendSelector).remove();
   if (appendToBody) {
-    if (mox.testTemplatePath && mox.testTemplateAppendSelector) {
-      jasmine.getFixtures().load(mox.testTemplatePath);
-      angular.element(document.body).find(mox.testTemplateAppendSelector).append(element);
-    } else {
-      jasmine.getFixtures().set(element);
-    }
+    var testTemplate = mox.testTemplatePath ? jasmine.getFixtures().read(mox.testTemplatePath) : angular.element('<div id="mox-container">');
+    body.append(testTemplate).find(mox.testTemplateAppendSelector).append(element);
   }
 
   currentSpec.element = element;
@@ -453,25 +451,32 @@ function addSelectors(element, selectors) {
     });
   }
 
-  function findElement(element, selector, args) {
-    if (selector) {
-      var replacedSelector = selector.replace(/{(\d+)}/g, function (match, group) {
-        return args[group];
-      });
-      return element.find(replacedSelector);
+  function findElement(element, value, args) {
+    if (value) {
+      if (angular.isString(value) || value.selector) {
+        var replacedSelector = (value.selector || value).replace(/{(\d+)}/g, function (match, group) {
+          return args[group];
+        });
+        return element.find(replacedSelector);
+      } else if (value.repeater) {
+        var elements = element.find(value.repeater);
+        return angular.isDefined(args[0]) ? elements.eq(args[0]) : elements;
+      }
     }
     return angular.element(element);
   }
 
   angular.forEach(selectors, function (value, key) {
-    var selector = angular.isObject(value) ? value.selector : value,
-      sub = value.sub,
-      children = value.children;
+    var
+      children = value.children,
+      sub = value.sub;
 
     checkAndSetFn(element, key, function moxExtendElement() {
-      var foundElement = findElement(element, selector, arguments);
-      addSelectors(foundElement, sub);
-      addChildFn(foundElement, children);
+      var foundElement = findElement(element, value, arguments);
+      if (!value.repeater || angular.isDefined(arguments[0])) {
+        addSelectors(foundElement, sub);
+        addChildFn(foundElement, children);
+      }
       return foundElement;
     });
   });
@@ -645,6 +650,7 @@ function MoxBuilder() {
 
   this.factories = moxConfig; // Factory functions for creating mocks
   this.get = {}; // Cache for mocked things
+  this.testTemplateAppendSelector = '#mox-container';
 
   /**
    * Injects one or multiple services and returns them
@@ -772,7 +778,7 @@ function MoxBuilder() {
    * 1. a directive name: the same as with an array, but just for one directive
    * 2. a directive factory object, for your own mock implementation.
    *   - name property is required
-   *   - index, scope, priority and restrict properties are not overwritable
+   *   - scope, priority and restrict properties are not overwritable
    * 3. an array of directive names (see 1) or objects (see 2)
    *
    * @param {...string|string[]|...Object|Object[]} directiveName directive(s) to mock
