@@ -15,9 +15,17 @@
   "license": "MIT",
   "homepage": "http://www.frankvanwijk.nl/mox",
   "ignore": [
-    "**/.*",
-    "node_modules",
-    "bower_components"
+    "test",
+    ".bowerrc",
+    ".gitignore",
+    ".jscsrc",
+    ".jshintrc",
+    ".travis.yml",
+    "bower.json",
+    "Gruntfile.js",
+    "karma.conf.js",
+    "package.json",
+    "wallaby.conf.js"
   ],
   "dependencies": {
     "angular": ">=1.2",
