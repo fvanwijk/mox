@@ -67,16 +67,15 @@ describe('The Mox library', function () {
         .run();
 
       // All but the next directive properties are stripped
-      expect(mox.inject('directiveDirective')[0]).toEqual({
+      expect(mox.inject('directiveDirective')[0]).toEqual(jasmine.objectContaining({
         name: 'directive',
-        $$isolateBindings: undefined,
         scope: {
           key: '='
         },
         priority: 2,
         index: 0,
         restrict: 'AE'
-      });
+      }));
     });
 
     it('should mock a the first registered directive with a newly defined version with some additional properties (name, scope, restrict and priority are not overwritable)', function () {
@@ -95,9 +94,8 @@ describe('The Mox library', function () {
         })
         .run();
 
-      expect(mox.inject('directiveDirective')[0]).toEqual({
+      expect(mox.inject('directiveDirective')[0]).toEqual(jasmine.objectContaining({
         name: 'directive',
-        $$isolateBindings: undefined,
         scope: {
           key: '='
         },
@@ -106,7 +104,7 @@ describe('The Mox library', function () {
         restrict: 'AE',
         template: '<div>New template</div>',
         link: newLinkFn
-      });
+      }));
     });
 
     describe('when there are multiple directives registered under the same name', function () {
