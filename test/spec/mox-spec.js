@@ -25,6 +25,12 @@ describe('The Mox library', function () {
           restrict: 'A',
           template: '<div>Directive 2</div>'
         };
+      })
+      .factory('factory', function () {
+        return {
+          methodA: angular.noop,
+          methodB: angular.noop
+        };
       });
     angular.module('test1a', []);
     angular.module('test2', []);
@@ -133,6 +139,79 @@ describe('The Mox library', function () {
 
     it('should throw an error when passing no arguments to mockDirectives', function () {
       expect(mox.mockDirectives).toThrow(Error('Please provide arguments'));
+    });
+
+  });
+
+  describe('createMock()', function () {
+    beforeEach(function () {
+      jasmine.addMatchers({
+        toBeSpy: function toBeSpy() {
+          return {
+            compare: function compareToBeSpy(actual) {
+              var pass = false, message;
+              if (angular.isFunction(actual)) {
+                actual();
+                if (actual.calls && actual.calls.any && actual.calls.any()) {
+                  pass = true;
+                  message = 'Expected ' + jasmine.pp(actual) + ' not to be a spy';
+                } else {
+                  message = 'Expected ' + jasmine.pp(actual) + ' to be a spy';
+                }
+              } else {
+                message = 'Expected ' + jasmine.pp(actual) + ' to be a spy, but it is no function';
+              }
+              return {
+                pass: pass,
+                message: message
+              };
+            }
+          };
+        }
+      });
+    });
+
+    it('should create a mock object with spy functions', function () {
+      var mock = mox.createMock('factory', ['methodA', 'methodB'])();
+      expect(mock.methodA).toBeSpy();
+    });
+
+    it('should create a function mock', function () {
+      var mock = mox.createMock('filter', [])();
+      expect(angular.noop).not.toBeSpy();
+    });
+
+    it('should create a constant/value mock', function () {
+      var mock = mox.createMock('constant')();
+      expect(mock).toBeUndefined();
+    });
+
+    describe('when provided $provide', function () {
+
+      var $provide;
+
+      beforeEach(function () {
+        mox.module('test', function (_$provide_) {
+          $provide = _$provide_;
+        }).run();
+        spyOn(mox, 'save');
+      });
+
+      it('should register the mock with Mox under its own name', function () {
+        var mock = mox.createMock('filter', [])($provide);
+        expect(mox.save).toHaveBeenCalledWith($provide, 'filter', mock, undefined);
+      });
+
+      it('should register the mock with Mox under an alias', function () {
+        var mock = mox.createMock('filter', [])($provide, 'alias');
+        expect(mox.save).toHaveBeenCalledWith($provide, 'alias', mock, undefined);
+      });
+
+      it('should register a constant mock as constant', function () {
+        var mock = mox.createMock('constant')($provide);
+        expect(mox.save).toHaveBeenCalledWith($provide, 'constant', mock, 'constant');
+      });
+
     });
 
   });

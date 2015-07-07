@@ -735,7 +735,8 @@ function MoxBuilder() {
           if (service.name === 'Resource') {
             mox.createResourceMock(mockName, getMethodNames(service))($provide);
           } else {
-            mox.createMock(mockName, getMethodNames(service))($provide);
+            var methodNames = angular.isFunction(service) ? getMethodNames(service) : undefined;
+            mox.createMock(mockName, methodNames)($provide);
           }
         }
       });
@@ -980,15 +981,21 @@ function MoxBuilder() {
 
   /**
    * Simple wrapper around jasmine.createSpyObj, ensures a new instance is returned for every call
+   * @param {string} mockName the name of the service to register the mock for
+   * @param {array} mockedMethods methods to create spies for on the mock. If the array is empty,
+   *                the mock itself will be a spy. If undefined, the mock will be undefined and registered as constant.
    *
    * @returns {Object}
    */
   this.createMock = function createMock(mockName, mockedMethods) {
 
     return function ($provide, nameOverride) {
-      var mock = (mockedMethods) ? jasmine.createSpyObj(mockName, mockedMethods) : jasmine.createSpy(mockName);
+      var mock = mockedMethods ? (mockedMethods.length ?
+          jasmine.createSpyObj(mockName, mockedMethods) // Object with spies
+          : jasmine.createSpy(mockName)) // Spy
+        : undefined; // Value or constant
       if ($provide) {
-        mox.save($provide, nameOverride ? nameOverride : mockName, mock);
+        mox.save($provide, nameOverride || mockName, mock, mockedMethods ? undefined : 'constant');
       }
 
       return mock;
