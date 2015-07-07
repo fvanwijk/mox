@@ -143,6 +143,38 @@ describe('The Mox library', function () {
 
   });
 
+  describe('saveMock()', function () {
+    var
+      $provide,
+      mockedFactory = 'mockedFactory',
+      mockedConstant = 'mockedConstant';
+
+    beforeEach(function () {
+      mox
+        .module('test', function (_$provide_) {
+          $provide = _$provide_;
+          spyOn($provide, 'value').and.callThrough();
+          mox.save($provide, 'factory', mockedFactory);
+          mox.save($provide, 'constant', mockedConstant, 'constant');
+        })
+        .run();
+    });
+
+    it('should register the mock as a value by default', function () {
+      expect($provide.value).toHaveBeenCalledWith('factory', mockedFactory);
+      expect(mox.inject('factory')).toBe(mockedFactory);
+    });
+
+    it('should register the mock with a specified recipe', function () {
+      expect(mox.inject('constant')).toBe(mockedConstant);
+    });
+
+    it('should save the mock in the Mox cache', function () {
+      expect(mox.get.constant).toBe(mockedConstant);
+      expect(mox.get.factory).toBe(mockedFactory);
+    });
+  });
+
   describe('createMock()', function () {
     beforeEach(function () {
       jasmine.addMatchers({
