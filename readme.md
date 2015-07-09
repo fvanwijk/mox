@@ -94,13 +94,19 @@ describe('Example of Mox', function () {
 
 ### mox.inject()
 
-Inject services without having to create a `inject(function(FooService) { })` wrapper. Mocks can also be injected this way,
-but for convenience you can access mocks using `mox.get.FooService`.
+Inject services directly using `inject('<service>')`, for example:
 
 ```javascript
 var fooService = inject('FooService');
+fooService.doSomething();
 var services = inject('FooService', 'BarService'); // { FooService: ..., BarService: ... }
+services.FooService.doSomething();
 ```
+
+This can be used instead of using a inject wrapper such as `inject(function(FooService) { })`.
+The `mox.inject` function can also be used to get mocked services but it is prefered to use `mox.get.FooService`.
+
+
 
 ### mox.module()
 
