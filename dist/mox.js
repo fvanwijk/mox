@@ -1042,8 +1042,7 @@ function MoxBuilder() {
       angular.extend(mock.constructor, mock);
 
       if ($provide) {
-        $provide.value(mockName, mock.constructor);
-        mox.get[mockName] = mock;
+        mox.save($provide, mockName, mock.constructor);
       }
 
       return mock.constructor;
