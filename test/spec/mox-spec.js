@@ -143,6 +143,28 @@ describe('The Mox library', function () {
 
   });
 
+  describe('disableDirectives()', function () {
+    it('should mock al the directives with this name with an empty implementation', function () {
+      mox
+        .module('test')
+        .disableDirectives('directive')
+        .run();
+
+      expect(mox.inject('directiveDirective')).toHaveLength(1);
+      expect(mox.inject('directiveDirective')).toEqual({});
+    });
+
+    it('should mock multiple directives', function () {
+      mox
+        .module('test')
+        .disableDirectives('directive', 'directive2')
+        .run();
+
+      expect(mox.inject('directiveDirective')).toEqual({});
+      expect(mox.inject('directive2Directive')).toEqual({});
+    });
+  });
+
   describe('saveMock()', function () {
     var
       $provide,
