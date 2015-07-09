@@ -31,6 +31,12 @@ describe('The Mox library', function () {
           methodA: angular.noop,
           methodB: angular.noop
         };
+      })
+      .controller('controller', function ($scope) {
+        $scope.name = 'testController';
+      })
+      .controller('controller2', function ($scope) {
+        $scope.name = 'testController2';
       });
     angular.module('test1a', []);
     angular.module('test2', []);
@@ -162,6 +168,32 @@ describe('The Mox library', function () {
 
       expect(mox.inject('directiveDirective')).toEqual({});
       expect(mox.inject('directive2Directive')).toEqual({});
+    });
+  });
+
+  describe('mockControllers()', function () {
+    it('should mock a controller with an empty implementation', function () {
+      mox
+        .module('test')
+        .mockControllers('controller')
+        .run();
+
+      var $scope = createScope();
+      mox.inject('$controller')('controller', $scope); // Controller sets $scope.name = 'testController';
+      expect($scope.name).toBeUndefined();
+    });
+
+    it('should mock multiple controllers', function () {
+      mox
+        .module('test')
+        .mockControllers('controller', 'controller2')
+        .run();
+
+      var $scope = createScope();
+      mox.inject('$controller')('controller', $scope); // Controller sets $scope.name = 'testController';
+      expect($scope.name).toBeUndefined();
+      mox.inject('$controller')('controller2', $scope); // Controller sets $scope.name = 'testController2';
+      expect($scope.name).toBeUndefined();
     });
   });
 
