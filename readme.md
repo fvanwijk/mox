@@ -53,14 +53,16 @@ describe('Example of Mox', function () {
       .disableDirectives(
         'fooDirective'
       )
-      .setupResults({
-        fooService: {
-          getBars: ['barData1', 'barData2'],
-          getTranslation: function (key) {
-            return key == 'fooTitle' ? 'mock title';
-          }
-        },
-        barFilter: 'mock filter result' // Object not allowed as return value
+      .setupResults(function () {
+        return {
+          fooService: {
+            getBars: ['barData1', 'barData2'],
+            getTranslation: function (key) {
+              return key == 'fooTitle' ? 'mock title';
+            }
+          },
+          barFilter: 'mock filter result' // Object not allowed as return value
+        };
       })
       .mockTemplates(
         'scripts/views/template1.html',
@@ -229,14 +231,16 @@ Pass an object with a configuration for the spy functions of the already registe
 If the value is a function, it will be set using Jasmine's `andCallFake()`, otherwise it uses `andReturn`
 
 ```javascript
-mox.setupResults({
-  fooService: {
-    getBars: ['barData1', 'barData2'],
-    getTranslation: function (key) {
-      return key == 'fooTitle' ? 'mock title' : 'mock other string';
-    }
-  },
-  barFilter: 'mock filter result' // Object not allowed as return value
+mox.setupResults(function () {
+  return {
+    fooService: {
+      getBars: ['barData1', 'barData2'],
+      getTranslation: function (key) {
+        return key == 'fooTitle' ? 'mock title' : 'mock other string';
+      }
+    },
+    barFilter: 'mock filter result' // Object not allowed as return value
+  };
 });
 ```
 
