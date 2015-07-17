@@ -263,12 +263,12 @@ describe('The Mox library', function () {
     });
 
     it('should create a function mock', function () {
-      var mock = mox.createMock('filter', [])();
+      var mock = mox.createMock('filter')();
       expect(angular.noop).not.toBeSpy();
     });
 
     it('should create a constant/value mock', function () {
-      var mock = mox.createMock('constant')();
+      var mock = mox.createMock('constant', false)();
       expect(mock).toBeUndefined();
     });
 
@@ -284,17 +284,17 @@ describe('The Mox library', function () {
       });
 
       it('should register the mock with Mox under its own name', function () {
-        var mock = mox.createMock('filter', [])($provide);
+        var mock = mox.createMock('filter')($provide);
         expect(mox.save).toHaveBeenCalledWith($provide, 'filter', mock, undefined);
       });
 
       it('should register the mock with Mox under an alias', function () {
-        var mock = mox.createMock('filter', [])($provide, 'alias');
+        var mock = mox.createMock('filter')($provide, 'alias');
         expect(mox.save).toHaveBeenCalledWith($provide, 'alias', mock, undefined);
       });
 
       it('should register a constant mock as constant', function () {
-        var mock = mox.createMock('constant')($provide);
+        var mock = mox.createMock('constant', false)($provide);
         expect(mox.save).toHaveBeenCalledWith($provide, 'constant', mock, 'constant');
       });
 
