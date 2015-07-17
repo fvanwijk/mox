@@ -17,6 +17,7 @@
   "ignore": [
     "test",
     ".bowerrc",
+    ".codeclimate.yml",
     ".gitignore",
     ".jscsrc",
     ".jshintrc",
