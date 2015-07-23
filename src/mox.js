@@ -122,7 +122,7 @@ function MoxBuilder() {
           if (service.name === 'Resource') {
             mox.createResourceMock(mockName, getMethodNames(service))($provide);
           } else {
-            var methodNames = angular.isFunction(service) ? getMethodNames(service) : undefined;
+            var methodNames = angular.isObject(service) || angular.isFunction(service) ? getMethodNames(service) : undefined;
             mox.createMock(mockName, methodNames)($provide);
           }
         }
