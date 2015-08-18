@@ -166,7 +166,7 @@ function MoxBuilder() {
    * 1. a directive name: the same as with an array, but just for one directive
    * 2. a directive factory object, for your own mock implementation.
    *   - name property is required
-   *   - scope, priority and restrict properties are not overwritable
+   *   - template, templateUrl, require, controller, link and compile properties are overwritable
    * 3. an array of directive names (see 1) or objects (see 2)
    *
    * @param {...string|string[]|...Object|Object[]} directiveName directive(s) to mock
@@ -185,17 +185,17 @@ function MoxBuilder() {
          * We decorate the original directive so that we can reuse the isolate bindings and other non-mockable DDO properties.
          */
         $provide.decorator(mock.name + 'Directive', function ($delegate) {
-          angular.extend(mock, {
-            name: $delegate[0].name,
-            $$isolateBindings: $delegate[0].$$isolateBindings,
-            scope: $delegate[0].scope,
-            index: $delegate[0].index,
-            priority: $delegate[0].priority,
-            restrict: $delegate[0].restrict
+          angular.extend($delegate[0], {
+            require: mock.require || undefined,
+            template: mock.template || undefined,
+            templateUrl: mock.templateUrl || undefined,
+            controller: mock.controller || undefined,
+            compile: mock.compile || undefined,
+            link: mock.link || undefined
           });
 
           // All directives are unregistered and replaced with this mock
-          return [mock];
+          return [$delegate[0]];
         });
       });
     });
