@@ -114,6 +114,14 @@ module.exports = function (grunt) {
         files: ['Gruntfile.js', '<%= paths.src %>/**/*.js', '<%= paths.test %>/spec/**/*.js'],
         tasks: ['test']
       }
+    },
+    bump: {
+      options: {
+        files: ['package.json', 'bower.json'],
+        commitFiles: ['package.json', 'bower.json'],
+        commitMessage: 'Bump version to v%VERSION%',
+        push: false
+      }
     }
   });
 
