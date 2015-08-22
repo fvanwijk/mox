@@ -219,6 +219,9 @@ function promise(result, dontCopy) {
   return deferred.promise;
 }
 
+/**
+ * @deprecated use resourcePromise, which does the same
+ */
 function restangularPromise(result) {
   return mox.inject('$q').when(angular.copy(result));
 }
