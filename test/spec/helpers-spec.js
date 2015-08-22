@@ -170,6 +170,125 @@ describe('The helper functions', function () {
 
     });
 
+    describe('promise shortcuts', function () {
+      describe('defer()', function () {
+        it('should return a deferred', function () {
+          var deferred = defer();
+
+          expect(deferred.promise).toBePromise();
+          deferred.resolve('resolve');
+          expect(deferred.promise).toResolveWith('resolve');
+
+          deferred = defer();
+          deferred.reject('reject');
+          expect(deferred.promise).toRejectWith('reject');
+        });
+      });
+
+      describe('when()', function () {
+        it('should return a resolving promise', function () {
+          expect(when('resolve')).toResolveWith('resolve');
+          expect(when(promise('resolve'))).toResolveWith('resolve');
+        });
+      });
+
+      describe('all()', function () {
+        it('should return a multi-resolving promise', function () {
+          expect(all(['resolve'])).toResolveWith(['resolve']);
+          expect(all([when('resolve')])).toResolveWith(['resolve']);
+        });
+      });
+
+      describe('unresolvedPromise()', function () {
+        it('should return a promise that is unresolved', function () {
+          expect(unresolvedPromise()).toBePromise();
+          expect(unresolvedPromise()).not.toResolve();
+        });
+      });
+
+      describe('promise()', function () {
+        it('should return a promise that resolves with the JSON-copied argument', function () {
+          var resolve = { resolve: true, $save: angular.noop };
+          expect(promise(resolve)).toResolveWith(function (result) {
+            expect(result).not.toBe(resolve);
+            expect(result).not.toEqual(resolve);
+            expect(result).toEqual(_.omit(resolve, '$save'));
+          });
+
+          expect(promise(promise('resolve'))).toResolveWith(promise('resolve'));
+        });
+
+        it('should not copy the argument when resolving', function () {
+          var resolve = { resolve: true };
+          expect(promise(resolve, true)).toResolveWith(function (result) {
+            expect(result).toBe(resolve);
+          });
+        });
+      });
+
+      describe('resourcePromise()', function () {
+        it('should return a promise that resolves with the copied argument', function () {
+          var resource = {
+            $save: angular.noop,
+            data: 'result'
+          };
+          expect(resourcePromise(resource)).toResolveWith(function (result) {
+            expect(result).toEqual(resource);
+            expect(result).not.toBe(resource);
+          });
+        });
+      });
+
+      describe('reject()', function () {
+        it('should return a rejecting promise', function () {
+          expect(reject('reject')).toRejectWith('reject');
+        });
+      });
+
+      describe('resourceResult()', function () {
+        it('should return a resource result that resolves with the data argument', function () {
+          var resourceData = {
+            $save: angular.noop,
+            data: 'result'
+          };
+
+          expect(resourceResult(resourceData).$promise).toResolveWith(function (result) {
+            expect(result).not.toBe(resourceData);
+            expect(result).not.toEqual(resourceData);
+            expect(result).toEqual(_.omit(resourceData, '$save'));
+          });
+        });
+
+        it('should return a resource result that resolves with the data argument and is enriched with mock methods', function () {
+          var resourceData = {
+            data: 'result'
+          };
+          var mock = { $save: angular.noop };
+
+          expect(resourceResult(resourceData, mock).$promise).toResolveWith(function (result) {
+            expect(result).toEqual(_.extend(mock, {
+              data: 'result'
+            }));
+            expect(result).toEqual(resourceData);
+          });
+        });
+      });
+
+      describe('nonResolvingResourceResult()', function () {
+        it('should return a resource result that does not resolve', function () {
+          var result = nonResolvingResourceResult();
+          expect(result).toEqual({ $promise: mox.inject('$q').defer().promise });
+          expect(result.$promise).not.toResolve();
+        });
+      });
+
+      describe('rejectingResourceResult()', function () {
+        it('should return a resource result that rejects', function () {
+          expect(rejectingResourceResult('reject').$promise).toRejectWith('reject');
+        });
+      });
+    });
+
     describe('addSelectors()', function () {
       var element;
       beforeEach(function () {
