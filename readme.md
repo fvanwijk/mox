@@ -58,7 +58,7 @@ describe('Example of Mox', function () {
           fooService: {
             getBars: ['barData1', 'barData2'],
             getTranslation: function (key) {
-              return key == 'fooTitle' ? 'mock title';
+              return key == 'fooTitle' ? 'mock title' : key;
             }
           },
           barFilter: 'mock filter result' // Object not allowed as return value
@@ -72,10 +72,11 @@ describe('Example of Mox', function () {
       .run();
 
     createScope();
-    createController('FootController');
+    createController('FooController');
 
-    it('should do something', inject(function (FooService) {
+    it('should do something', function () {
 
+      var FooService  = mox.inject('FooService');
       expect(this.$scope.foo).toBe('bar');
       expect(FooService).toBe(mox.get.FooService);
       expect(FooService.getBars()).toEqual(['barData1', 'barData2']);
@@ -220,7 +221,9 @@ As bonus, the mocks are added to the `mox.get` object, so that you can access mo
 Returns the result of angular.mocks.module`, so that the call can passed as argument to `beforeEach`. So chaining is not possible after `run()`.
 
 ```javascript
-beforeEach(mox.module('myApp').run());
+beforeEach(function () {
+  mox.module('myApp').run();
+});
 ```
 
 ## Mox configuration methods
@@ -228,7 +231,7 @@ beforeEach(mox.module('myApp').run());
 ### mox.setupResults()
 
 Pass an object with a configuration for the spy functions of the already registered mocks.
-If the value is a function, it will be set using Jasmine's `andCallFake()`, otherwise it uses `andReturn`
+If the value is a function, it will be set using Jasmine's `and.callFake()`, otherwise it uses `and.returnValue`
 
 ```javascript
 mox.setupResults(function () {
@@ -246,7 +249,7 @@ mox.setupResults(function () {
 
 ### mox.mockTemplates()
 
-Replaces templates with a mock template: `<div>This is a mock for views/templatename.html</div>` or a custom template.
+Replaces templates with a mock template: `<div>This is a mock for views/templateName.html</div>` or a custom template.
 This is very useful when you want to mock an `ng-include` in your view spec. The mocked templates will be tested in a
 separate view spec.
 
@@ -263,7 +266,7 @@ mox.mockTemplates(
 Or just one template:
 
 ```javascript
-mox.mockTemplates('scripts/views/templatename.html');
+mox.mockTemplates('scripts/views/templateName.html');
 ```
 
 Or:
