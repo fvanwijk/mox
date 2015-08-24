@@ -492,4 +492,140 @@ describe('The helper functions', function () {
       });
     });
   });
+
+  describe('requestTest() DSL for testing resources', function () {
+    beforeEach(function () {
+      mox.module('mox').run();
+    });
+
+    it('should setup the test', function () {
+      var test = requestTest();
+      expect(test._httpMethod).toBe('GET');
+      expect(test._data).toBeNull();
+    });
+
+    it('should set the path', function () {
+      expect(requestTest().whenPath('path')._path).toBe('path');
+    });
+
+    it('should set the method with arguments', function () {
+      var test = requestTest().whenMethod('get', 'arg1', 'arg2');
+      expect(test._method).toBe('get');
+      expect(test._methodArguments).toEqual(['arg1', 'arg2']);
+    });
+
+    it('should have whenCall as alias for whenMethod', function () {
+      expect(requestTest().whenCall('get')._method).toBe('get');
+    });
+
+    it('should set the httpMethod', function () {
+      expect(requestTest().whenHttpMethod('PUT')._httpMethod).toBe('PUT');
+    });
+
+    it('should set the data', function () {
+      expect(requestTest().whenData('data')._data).toBe('data');
+    });
+
+    it('should set the httpMethod, path and data in one call', function () {
+      var test = requestTest().expectRequest('GET', 'path', 'data');
+      expect(test._httpMethod).toBe('GET');
+      expect(test._path).toBe('path');
+      expect(test._data).toBe('data');
+    });
+
+    it('should set the response', function () {
+      var test = requestTest().andRespond('response');
+      expect(test._response).toBe('response');
+      expect(test._expectedResult).toBe('response');
+    });
+
+    it('should set the expectation', function () {
+      expect(requestTest().andExpect('response')._expectedResult).toBe('response');
+    });
+
+    it('should set the httpMethod GET and path', function () {
+      var test = requestTest().expectGet('path', 'data'); // data is omitted
+      expect(test._httpMethod).toBe('GET');
+      expect(test._path).toBe('path');
+      expect(test._data).toBeUndefined();
+    });
+
+    it('should set the httpMethod POST, with data and path', function () {
+      var test = requestTest().expectPost('path', 'data');
+      expect(test._httpMethod).toBe('POST');
+      expect(test._path).toBe('path');
+      expect(test._data).toBe('data');
+    });
+
+    it('should set the httpMethod PUT, with data and path', function () {
+      var test = requestTest().expectPut('path', 'data');
+      expect(test._httpMethod).toBe('PUT');
+      expect(test._path).toBe('path');
+      expect(test._data).toBe('data');
+    });
+
+    it('should set the httpMethod DELETE and path', function () {
+      var test = requestTest().expectDelete('path', 'data');
+      expect(test._httpMethod).toBe('DELETE');
+      expect(test._path).toBe('path');
+      expect(test._data).toBe('data');
+    });
+
+    it('should set the expected query params', function () {
+      expect(requestTest().expectQueryParams({ param1: 'param1' })._expectedQueryParams).toEqual({ param1: 'param1' });
+    });
+
+    describe('when testing the resource', function () {
+      it('should pass when testing the resource', function () {
+        function callMethod(args) {
+          expect(args).toBe('args');
+          return mox.inject('$http').post('path?param1=param1', { data: 'data' });
+        }
+
+        requestTest()
+          .whenMethod(callMethod, 'args')
+          .expectPost('path', { data: 'data' })
+          .expectQueryParams({ param1: 'param1' })
+          .run();
+      });
+
+      it('should pass when providing the path without queryParams', function () {
+        function callMethod() {
+          return mox.inject('$http').post('path');
+        }
+
+        requestTest()
+          .whenMethod(callMethod)
+          .expectPost('path')
+          .run();
+      });
+
+      it('should pass when not providing the path but only queryParams', function () {
+        function callMethod() {
+          return mox.inject('$http').post('path?param1=param1', { data: 'data' });
+        }
+
+        requestTest()
+          .whenMethod(callMethod)
+          .expectQueryParams({ param1: 'param1' })
+          .expectPost()
+          .run();
+      });
+
+      it('should test a failing resource call', function () {
+        function callMethod() {
+          return mox.inject('$http').post('path')
+            .then(function () {
+              return reject('reject');
+            });
+        }
+
+        requestTest()
+          .whenMethod(callMethod)
+          .expectPost('path')
+          .fail();
+      });
+
+    });
+  });
 });

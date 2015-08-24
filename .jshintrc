@@ -24,6 +24,7 @@
     "promise": false,
     "reject": false,
     "rejectingResourceResult": false,
+    "requestTest": false,
     "resourcePromise": false,
     "resourceResult": false,
     "sinon": false,
