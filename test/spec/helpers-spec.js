@@ -626,6 +626,36 @@ describe('The helper functions', function () {
           .fail();
       });
 
+      it('should test with a resolving resource call and do additional tests', function () {
+        function callMethod() {
+          return mox.inject('$http').post('path');
+        }
+
+        requestTest()
+          .whenMethod(callMethod)
+          .expectPost('path')
+          .andExpect(function (response) {
+            expect(response.status).toEqual(200);
+          })
+          .run();
+      });
+
+      it('should test with a resolving resource call and do additional tests', function () {
+        function callMethod() {
+          return mox.inject('$http').post('path')
+            .then(function () {
+              return reject('reject');
+            });
+        }
+
+        requestTest()
+          .whenMethod(callMethod)
+          .expectPost('path')
+          .andExpect(function (response) {
+            expect(response).toBe('reject');
+          })
+          .fail();
+      });
     });
   });
 });

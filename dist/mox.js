@@ -499,6 +499,7 @@ function addSelectors(element, selectors) {
  */
 function requestTest() {
 
+  var self = this;
   var test = {
     _httpMethod: 'GET',
     _data: null
@@ -598,7 +599,12 @@ function requestTest() {
 
       mox.inject('$httpBackend').flush();
 
-      test._expectedResult((test._expectFail ? failureCallback : successCallback).mostRecentCall.args[0]);
+      var cb = test._expectFail ? failureCallback : successCallback;
+      if (self.isJasmine2) {
+        test._expectedResult(cb.calls.mostRecent().args[0]);
+      } else {
+        test._expectedResult(cb.mostRecentCall.args[0]);
+      }
     } else {
       mox.inject('$httpBackend').flush();
 
