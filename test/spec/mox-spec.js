@@ -99,30 +99,42 @@ describe('The Mox library', function () {
 
     it('should mock a the first registered directive with a newly defined version with some additional properties (name, scope, restrict and priority are not overwritable)', function () {
       var newLinkFn = angular.noop;
+      var newCompileFn = angular.noop;
+      var newControllerFn = angular.noop;
       mox
         .module('test')
         .mockDirectives({
+          compile: newCompileFn,
+          controller: newControllerFn,
+          link: newLinkFn,
           name: 'directive',
+          priority: 3,
+          require: 'siblingDirectiveName',
+          restrict: 'A',
           scope: {
             otherKey: '='
           },
-          restrict: 'A',
-          priority: 3,
           template: '<div>New template</div>',
-          link: newLinkFn
+          templateUrl: 'url',
+          transclude: true,
         })
         .run();
 
       expect(mox.inject('directiveDirective')[0]).toEqual(jasmine.objectContaining({
+        compile: newCompileFn,
+        controller: newControllerFn,
+        index: 0,
+        link: newLinkFn,
         name: 'directive',
+        priority: 2,
+        require: 'siblingDirectiveName',
+        restrict: 'AE',
         scope: {
           key: '='
         },
-        priority: 2,
-        index: 0,
-        restrict: 'AE',
         template: '<div>New template</div>',
-        link: newLinkFn
+        templateUrl: 'url',
+        transclude: true,
       }));
     });
 
