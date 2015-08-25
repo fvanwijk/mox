@@ -474,3 +474,4 @@ expect(element.footer().spans()).toHaveLength(2);
 * [@mikewoudenberg](https://github.com/mikewoudenberg)
 * [@fwielstra](https://github.com/fwielstra)
 * [@jbnicolai](https://github.com/jbnicolai)
+* [@wietsevenema](https://github.com/wietsevenema)

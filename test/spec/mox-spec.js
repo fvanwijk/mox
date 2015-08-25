@@ -84,6 +84,13 @@ describe('The Mox library', function () {
         scope: {
           key: '='
         },
+        require: undefined,
+        controller: undefined,
+        templateUrl: undefined,
+        template: undefined,
+        link: undefined,
+        transclude: undefined,
+        compile: undefined,
         priority: 2,
         index: 0,
         restrict: 'AE'
