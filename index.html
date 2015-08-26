@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset='utf-8'>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <link href='https://fonts.googleapis.com/css?family=Architects+Daughter' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen">
+    <link rel="stylesheet" type="text/css" href="stylesheets/github-light.css" media="screen">
+    <link rel="stylesheet" type="text/css" href="stylesheets/print.css" media="print">
+
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+
+    <title>Mox by fvanwijk</title>
+  </head>
+
+  <body>
+    <header>
+      <div class="inner">
+        <h1>Mox</h1>
+        <h2>Utility library for AngularJS/Jasmine mocks</h2>
+        <a href="https://github.com/fvanwijk/mox" class="button"><small>View project on</small> GitHub</a>
+      </div>
+    </header>
+
+    <div id="content-wrapper">
+      <div class="inner clearfix">
+        <section id="main-content">
+          <h1>
+<a id="mox-mocking-utility-library-for-angularjs-apps" class="anchor" href="#mox-mocking-utility-library-for-angularjs-apps" aria-hidden="true"><span class="octicon octicon-link"></span></a>Mox: Mocking utility library for AngularJS apps</h1>
+
+<p><a href="https://travis-ci.org/fvanwijk/mox"><img src="https://travis-ci.org/fvanwijk/mox.svg?branch=master" alt="Build Status"></a>
+<a href="https://codeclimate.com/github/fvanwijk/mox"><img src="https://codeclimate.com/github/fvanwijk/mox/badges/coverage.svg" alt="Test Coverage"></a>
+<a href="https://codeclimate.com/github/fvanwijk/mox"><img src="https://codeclimate.com/github/fvanwijk/mox/badges/gpa.svg" alt="Code Climate"></a></p>
+
+<p>When it comes to unit tests, normally a lot of boilerplate code is written to set up the mocks. This library consists of
+some utility functions to set up mocks very fast and have total control of the scope of your tests.</p>
+
+<h2>
+<a id="usage" class="anchor" href="#usage" aria-hidden="true"><span class="octicon octicon-link"></span></a>Usage</h2>
+
+<p>Copy moxConfig.js to your project test folder. Put mox.js and moxConfig.js in your karma.conf.js file list, is this order:</p>
+
+<div class="highlight highlight-javascript"><pre>files<span class="pl-k">:</span> [
+...
+  <span class="pl-s"><span class="pl-pds">'</span>bower_components/jasmine-mox-matchers/src/jasmine-mox-matchers.js<span class="pl-pds">'</span></span> <span class="pl-c">// or dist/jasmine-mox-matchers.min.js</span>
+  <span class="pl-s"><span class="pl-pds">'</span>bower_components/mox/dist/mox.js<span class="pl-pds">'</span></span>, <span class="pl-c">// Or mox.min.js</span>
+  <span class="pl-s"><span class="pl-pds">'</span>test/moxConfig.js<span class="pl-pds">'</span></span>,
+...
+],</pre></div>
+
+<h2>
+<a id="full-usage-example" class="anchor" href="#full-usage-example" aria-hidden="true"><span class="octicon octicon-link"></span></a>Full usage example</h2>
+
+<div class="highlight highlight-javascript"><pre><span class="pl-c1">describe</span>(<span class="pl-s"><span class="pl-pds">'</span>Example of Mox<span class="pl-pds">'</span></span>, <span class="pl-k">function</span> () {
+
+  <span class="pl-c1">beforeEach</span>(<span class="pl-k">function</span>() {
+
+    mox
+      .<span class="pl-c1">module</span>(
+        <span class="pl-s"><span class="pl-pds">'</span>myApp<span class="pl-pds">'</span></span>,
+        <span class="pl-k">function</span> (<span class="pl-smi">$provide</span>) {
+          <span class="pl-c">// Custom module config function</span>
+          $provide.<span class="pl-c1">constant</span>(<span class="pl-s"><span class="pl-pds">'</span>yolo<span class="pl-pds">'</span></span>, <span class="pl-s"><span class="pl-pds">'</span>swag<span class="pl-pds">'</span></span>);
+        }
+      )
+      .<span class="pl-c1">mockServices</span>(
+        <span class="pl-s"><span class="pl-pds">'</span>FooService<span class="pl-pds">'</span></span>,
+        <span class="pl-s"><span class="pl-pds">'</span>barFilter<span class="pl-pds">'</span></span>
+      )
+      .<span class="pl-c1">mockConstants</span>({
+        fooConstant<span class="pl-k">:</span> value
+      })
+      .<span class="pl-c1">mockDirectives</span>(
+        <span class="pl-s"><span class="pl-pds">'</span>bazDirective<span class="pl-pds">'</span></span>,
+        {
+          name<span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">'</span>yoloDirective<span class="pl-pds">'</span></span>,
+          template<span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">'</span>&lt;div&gt;Custom directive template&lt;/div&gt;<span class="pl-pds">'</span></span>,
+          <span class="pl-en">link</span><span class="pl-k">:</span> <span class="pl-k">function</span> <span class="pl-en">customLinkFn</span>() { }
+        }
+      )
+      .<span class="pl-c1">disableDirectives</span>(
+        <span class="pl-s"><span class="pl-pds">'</span>fooDirective<span class="pl-pds">'</span></span>
+      )
+      .<span class="pl-c1">setupResults</span>(<span class="pl-k">function</span> () {
+        <span class="pl-k">return</span> {
+          fooService<span class="pl-k">:</span> {
+            getBars<span class="pl-k">:</span> [<span class="pl-s"><span class="pl-pds">'</span>barData1<span class="pl-pds">'</span></span>, <span class="pl-s"><span class="pl-pds">'</span>barData2<span class="pl-pds">'</span></span>],
+            <span class="pl-en">getTranslation</span><span class="pl-k">:</span> <span class="pl-k">function</span> (<span class="pl-smi">key</span>) {
+              <span class="pl-k">return</span> key <span class="pl-k">==</span> <span class="pl-s"><span class="pl-pds">'</span>fooTitle<span class="pl-pds">'</span></span> <span class="pl-k">?</span> <span class="pl-s"><span class="pl-pds">'</span>mock title<span class="pl-pds">'</span></span> <span class="pl-k">:</span> key;
+            }
+          },
+          barFilter<span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">'</span>mock filter result<span class="pl-pds">'</span></span> <span class="pl-c">// Object not allowed as return value</span>
+        };
+      })
+      .<span class="pl-c1">mockTemplates</span>(
+        <span class="pl-s"><span class="pl-pds">'</span>scripts/views/template1.html<span class="pl-pds">'</span></span>,
+        <span class="pl-s"><span class="pl-pds">'</span>scripts/views/template2.html<span class="pl-pds">'</span></span>,
+      )
+      .<span class="pl-c1">mockControllers</span>(<span class="pl-s"><span class="pl-pds">'</span>ChildController<span class="pl-pds">'</span></span>)
+      .<span class="pl-c1">run</span>();
+
+    <span class="pl-c1">createScope</span>();
+    <span class="pl-c1">createController</span>(<span class="pl-s"><span class="pl-pds">'</span>FooController<span class="pl-pds">'</span></span>);
+
+    <span class="pl-c1">it</span>(<span class="pl-s"><span class="pl-pds">'</span>should do something<span class="pl-pds">'</span></span>, <span class="pl-k">function</span> () {
+
+      <span class="pl-k">var</span> FooService  <span class="pl-k">=</span> mox.<span class="pl-c1">inject</span>(<span class="pl-s"><span class="pl-pds">'</span>FooService<span class="pl-pds">'</span></span>);
+      <span class="pl-c1">expect</span>(<span class="pl-v">this</span>.$scope.<span class="pl-c1">foo</span>).<span class="pl-c1">toBe</span>(<span class="pl-s"><span class="pl-pds">'</span>bar<span class="pl-pds">'</span></span>);
+      <span class="pl-c1">expect</span>(FooService).<span class="pl-c1">toBe</span>(mox.<span class="pl-c1">get</span>.<span class="pl-c1">FooService</span>);
+      <span class="pl-c1">expect</span>(FooService.<span class="pl-c1">getBars</span>()).<span class="pl-c1">toEqual</span>([<span class="pl-s"><span class="pl-pds">'</span>barData1<span class="pl-pds">'</span></span>, <span class="pl-s"><span class="pl-pds">'</span>barData2<span class="pl-pds">'</span></span>]);
+
+      <span class="pl-k">var</span> translation <span class="pl-k">=</span> FooService.<span class="pl-c1">getTranslation</span>(<span class="pl-s"><span class="pl-pds">'</span>fooTitle<span class="pl-pds">'</span></span>);
+
+      <span class="pl-c1">expect</span>(FooService.<span class="pl-c1">getTranslation</span>).<span class="pl-c1">toHaveBeenCalledWith</span>(<span class="pl-s"><span class="pl-pds">'</span>fooTitle<span class="pl-pds">'</span></span>);
+      <span class="pl-c1">expect</span>(translation).<span class="pl-c1">toBe</span>(<span class="pl-s"><span class="pl-pds">'</span>mockTitle<span class="pl-pds">'</span></span>);
+
+    });
+
+  });
+
+});</pre></div>
+
+<h2>
+<a id="mox-registration-methods" class="anchor" href="#mox-registration-methods" aria-hidden="true"><span class="octicon octicon-link"></span></a>Mox registration methods</h2>
+
+<h3>
+<a id="moxinject" class="anchor" href="#moxinject" aria-hidden="true"><span class="octicon octicon-link"></span></a>mox.inject()</h3>
+
+<p>Inject services directly using <code>inject('&lt;service&gt;')</code>, for example:</p>
+
+<div class="highlight highlight-javascript"><pre><span class="pl-k">var</span> fooService <span class="pl-k">=</span> <span class="pl-c1">inject</span>(<span class="pl-s"><span class="pl-pds">'</span>FooService<span class="pl-pds">'</span></span>);
+fooService.<span class="pl-c1">doSomething</span>();
+<span class="pl-k">var</span> services <span class="pl-k">=</span> <span class="pl-c1">inject</span>(<span class="pl-s"><span class="pl-pds">'</span>FooService<span class="pl-pds">'</span></span>, <span class="pl-s"><span class="pl-pds">'</span>BarService<span class="pl-pds">'</span></span>); <span class="pl-c">// { FooService: ..., BarService: ... }</span>
+services.<span class="pl-c1">FooService</span>.<span class="pl-c1">doSomething</span>();</pre></div>
+
+<p>This can be used instead of using a inject wrapper such as <code>inject(function(FooService) { })</code>.
+The <code>mox.inject</code> function can also be used to get mocked services but it is prefered to use <code>mox.get.FooService</code>.</p>
+
+<h3>
+<a id="moxmodule" class="anchor" href="#moxmodule" aria-hidden="true"><span class="octicon octicon-link"></span></a>mox.module()</h3>
+
+<p>Sets up the module, just like <a href="https://docs.angularjs.org/api/ngMock/function/angular.mock.module">module()</a> does.
+Pass module names, config functions or objects. The passed arguments are executed when <code>run()</code> is called.</p>
+
+<p>Returns the Mox instance to make chaining possible.</p>
+
+<div class="highlight highlight-javascript"><pre>mox.<span class="pl-c1">module</span>(<span class="pl-s"><span class="pl-pds">'</span>foo<span class="pl-pds">'</span></span>, <span class="pl-k">function</span> (<span class="pl-smi">$provide</span>) {
+  $provide.<span class="pl-c1">constant</span>(<span class="pl-s"><span class="pl-pds">'</span>foo<span class="pl-pds">'</span></span>, <span class="pl-s"><span class="pl-pds">'</span>bar<span class="pl-pds">'</span></span>);
+})</pre></div>
+
+<h3>
+<a id="moxmockservices" class="anchor" href="#moxmockservices" aria-hidden="true"><span class="octicon octicon-link"></span></a>mox.mockServices()</h3>
+
+<p>Registers services to be mocked. This can be an Angular factory, service and/or filter. The mocked service will be a spy
+object with spies for every method in the original service, unless there is a factory function defined in the moxConfig.js file.
+This function tries create a resource mock or normal mock depending on the mock name prefix (<code>Filter</code> or <code>Resource</code>).
+The following mocks are created:</p>
+
+<ul>
+<li>when mock factory exists in <code>moxConfig.js</code>: jasmine spy object with spy methods as defined in mock (factory function is executed)</li>
+<li>when name ends with <code>Filter</code>: jasmine spy</li>
+<li>when name ends with <code>Resource</code>: jasmine spy object with spy methods <code>get</code>, <code>query</code>, <code>save</code>, <code>remove</code>, <code>delete</code>,
+<code>$get</code>, <code>$query</code>, <code>$save</code>, <code>$remove</code>, <code>$delete</code>
+</li>
+<li>otherwise a jasmine spy object with spy methods from the original service</li>
+</ul>
+
+<p>One service:</p>
+
+<div class="highlight highlight-javascript"><pre>mox.<span class="pl-c1">mockServices</span>(<span class="pl-s"><span class="pl-pds">'</span>FooResource<span class="pl-pds">'</span></span>)</pre></div>
+
+<p>Multiple services:</p>
+
+<div class="highlight highlight-javascript"><pre>mox.<span class="pl-c1">mockServices</span>(
+   <span class="pl-s"><span class="pl-pds">'</span>fooResource<span class="pl-pds">'</span></span>,
+   <span class="pl-s"><span class="pl-pds">'</span>barService<span class="pl-pds">'</span></span>
+)</pre></div>
+
+<p>Returns the Mox instance to make chaining possible.</p>
+
+<h3>
+<a id="moxmockconstants" class="anchor" href="#moxmockconstants" aria-hidden="true"><span class="octicon octicon-link"></span></a>mox.mockConstants()</h3>
+
+<p>Register constants to be mocked and define their value. These mocks can be injected in a config function immediately.
+Pass a name and value as parameters for one constant, or an object with definitions for multiple constants.</p>
+
+<p>One constant:</p>
+
+<div class="highlight highlight-javascript"><pre>mox.<span class="pl-c1">mockConstant</span>(<span class="pl-s"><span class="pl-pds">'</span>FooConstant<span class="pl-pds">'</span></span>, <span class="pl-s"><span class="pl-pds">'</span>value<span class="pl-pds">'</span></span>)</pre></div>
+
+<p>Multiple constants:</p>
+
+<div class="highlight highlight-javascript"><pre>mox.<span class="pl-c1">mockConstant</span>({
+  FooConstant<span class="pl-k">:</span> value,
+  BarConstant<span class="pl-k">:</span> anotherValue
+})</pre></div>
+
+<h3>
+<a id="moxmockdirectives" class="anchor" href="#moxmockdirectives" aria-hidden="true"><span class="octicon octicon-link"></span></a>mox.mockDirectives()</h3>
+
+<p>Register directive(s) to be mocked. The mock will be an empty directive with the same isolate scope as the original directive,
+so the isolate scope of the directive can be tested:</p>
+
+<div class="highlight highlight-javascript"><pre>compiledElement.<span class="pl-c1">find</span>(<span class="pl-s"><span class="pl-pds">'</span>[directive-name]<span class="pl-pds">'</span></span>).<span class="pl-c1">toContainIsolateScope</span>({ key<span class="pl-k">:</span> value });</pre></div>
+
+<p>Accepts 3 types of input:
+1. a directive name: the same as with an array, but just for one directive
+2. a directive factory object, for your own mock implementation.</p>
+
+<ul>
+<li>name property is required</li>
+<li>scope, priority and restrict properties are not overwritable
+
+<ol>
+<li>an array of directive names (see 1) or objects (see 2)</li>
+</ol>
+</li>
+</ul>
+
+<p>Returns the Mox instance to make chaining possible.</p>
+
+<h3>
+<a id="moxdisabledirectives" class="anchor" href="#moxdisabledirectives" aria-hidden="true"><span class="octicon octicon-link"></span></a>mox.disableDirectives()</h3>
+
+<p>"Disables" the given list of directives, not just mocking them.
+Accepts directive name or array with directive names to disable.</p>
+
+<p>Returns the Mox instance to make chaining possible.</p>
+
+<h3>
+<a id="moxmockcontrollers" class="anchor" href="#moxmockcontrollers" aria-hidden="true"><span class="octicon octicon-link"></span></a>mox.mockControllers()</h3>
+
+<p>Registers controllers to be mocked. This is useful for view specs where the template contains an <code>ng-controller</code>.
+The view's <code>$scope</code> is not set by the controller anymore, but you have to set the <code>$scope</code> manually.</p>
+
+<div class="highlight highlight-javascript"><pre>mox.<span class="pl-c1">mockControllers</span>(<span class="pl-s"><span class="pl-pds">'</span>FooController<span class="pl-pds">'</span></span>)</pre></div>
+
+<p>Returns the Mox instance to make chaining possible.</p>
+
+<h3>
+<a id="moxrun" class="anchor" href="#moxrun" aria-hidden="true"><span class="octicon octicon-link"></span></a>mox.run()</h3>
+
+<p>Executes all registered stuff so that the actual mocking is done. If you forget to call <code>run()</code>, nothing will be mocked.
+The real services will be overwritten by mocks via <code>$provide.value</code>, so when you inject <code>FooService</code>, you get the mocked service, including
+spies on all methods.</p>
+
+<p>As bonus, the mocks are added to the <code>mox.get</code> object, so that you can access mocks easily in your specs without having to inject them.</p>
+
+<p>Returns the result of angular.mocks.module<code>, so that the call can passed as argument to</code>beforeEach<code>. So chaining is not possible after</code>run()`.</p>
+
+<div class="highlight highlight-javascript"><pre><span class="pl-c1">beforeEach</span>(<span class="pl-k">function</span> () {
+  mox.<span class="pl-c1">module</span>(<span class="pl-s"><span class="pl-pds">'</span>myApp<span class="pl-pds">'</span></span>).<span class="pl-c1">run</span>();
+});</pre></div>
+
+<h2>
+<a id="mox-configuration-methods" class="anchor" href="#mox-configuration-methods" aria-hidden="true"><span class="octicon octicon-link"></span></a>Mox configuration methods</h2>
+
+<h3>
+<a id="moxsetupresults" class="anchor" href="#moxsetupresults" aria-hidden="true"><span class="octicon octicon-link"></span></a>mox.setupResults()</h3>
+
+<p>Pass an object with a configuration for the spy functions of the already registered mocks.
+If the value is a function, it will be set using Jasmine's <code>and.callFake()</code>, otherwise it uses <code>and.returnValue</code></p>
+
+<div class="highlight highlight-javascript"><pre>mox.<span class="pl-c1">setupResults</span>(<span class="pl-k">function</span> () {
+  <span class="pl-k">return</span> {
+    fooService<span class="pl-k">:</span> {
+      getBars<span class="pl-k">:</span> [<span class="pl-s"><span class="pl-pds">'</span>barData1<span class="pl-pds">'</span></span>, <span class="pl-s"><span class="pl-pds">'</span>barData2<span class="pl-pds">'</span></span>],
+      <span class="pl-en">getTranslation</span><span class="pl-k">:</span> <span class="pl-k">function</span> (<span class="pl-smi">key</span>) {
+        <span class="pl-k">return</span> key <span class="pl-k">==</span> <span class="pl-s"><span class="pl-pds">'</span>fooTitle<span class="pl-pds">'</span></span> <span class="pl-k">?</span> <span class="pl-s"><span class="pl-pds">'</span>mock title<span class="pl-pds">'</span></span> <span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">'</span>mock other string<span class="pl-pds">'</span></span>;
+      }
+    },
+    barFilter<span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">'</span>mock filter result<span class="pl-pds">'</span></span> <span class="pl-c">// Object not allowed as return value</span>
+  };
+});</pre></div>
+
+<h3>
+<a id="moxmocktemplates" class="anchor" href="#moxmocktemplates" aria-hidden="true"><span class="octicon octicon-link"></span></a>mox.mockTemplates()</h3>
+
+<p>Replaces templates with a mock template: <code>&lt;div&gt;This is a mock for views/templateName.html&lt;/div&gt;</code> or a custom template.
+This is very useful when you want to mock an <code>ng-include</code> in your view spec. The mocked templates will be tested in a
+separate view spec.</p>
+
+<p>Note that this method is not called in the chain that ends with <code>run()</code>. This is because <code>mockTemplates</code> needs the injector
+to already be initialized, which is done after calling <code>run()</code>.</p>
+
+<div class="highlight highlight-javascript"><pre>mox.<span class="pl-c1">mockTemplates</span>(
+  <span class="pl-s"><span class="pl-pds">'</span>scripts/views/templatename.html<span class="pl-pds">'</span></span>,
+  { <span class="pl-s"><span class="pl-pds">'</span>scripts/views/anotherTemplate.html<span class="pl-pds">'</span></span><span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">'</span>&lt;tr&gt;&lt;td&gt;&lt;/td&gt;&lt;/tr&gt;<span class="pl-pds">'</span></span> }
+)</pre></div>
+
+<p>Or just one template:</p>
+
+<div class="highlight highlight-javascript"><pre>mox.<span class="pl-c1">mockTemplates</span>(<span class="pl-s"><span class="pl-pds">'</span>scripts/views/templateName.html<span class="pl-pds">'</span></span>);</pre></div>
+
+<p>Or:</p>
+
+<div class="highlight highlight-javascript"><pre>mox.<span class="pl-c1">mockTemplate</span>({ <span class="pl-s"><span class="pl-pds">'</span>scripts/views/anotherTemplate.html<span class="pl-pds">'</span></span><span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">'</span>&lt;tr&gt;&lt;td&gt;&lt;/td&gt;&lt;/tr&gt;<span class="pl-pds">'</span></span> });</pre></div>
+
+<h2>
+<a id="static-methodsproperties" class="anchor" href="#static-methodsproperties" aria-hidden="true"><span class="octicon octicon-link"></span></a>Static methods/properties</h2>
+
+<h3>
+<a id="moxsave" class="anchor" href="#moxsave" aria-hidden="true"><span class="octicon octicon-link"></span></a>mox.save()</h3>
+
+<p>Registers a mock and save it to the cache.
+This method usually is used when defining a custom mock factory function or when manually creating a mock.</p>
+
+<div class="highlight highlight-javascript"><pre>mox.<span class="pl-c1">save</span>($provide, <span class="pl-s"><span class="pl-pds">'</span>FooService<span class="pl-pds">'</span></span>, fooServiceMock);</pre></div>
+
+<p>Returns the saved mock.</p>
+
+<h3>
+<a id="moxget" class="anchor" href="#moxget" aria-hidden="true"><span class="octicon octicon-link"></span></a>mox.get</h3>
+
+<p>When a mock is registered, you can get the mock without injecting it.</p>
+
+<div class="highlight highlight-javascript"><pre><span class="pl-k">var</span> fooService <span class="pl-k">=</span> mox.<span class="pl-c1">get</span>.<span class="pl-c1">FooService</span>;</pre></div>
+
+<h3>
+<a id="moxfactories" class="anchor" href="#moxfactories" aria-hidden="true"><span class="octicon octicon-link"></span></a>mox.factories</h3>
+
+<p>Call a mock factory function manually without chaining via <code>mox</code>.
+The factory functions needs to be defined in moxConfig.</p>
+
+<div class="highlight highlight-javascript"><pre>mox.<span class="pl-c1">factories</span>.<span class="pl-c1">FooServices</span>($provide);</pre></div>
+
+<h2>
+<a id="testing-a-resource" class="anchor" href="#testing-a-resource" aria-hidden="true"><span class="octicon octicon-link"></span></a>Testing a $resource</h2>
+
+<p>Setting up a resource test normally involves a lot of boilerplate code, like injecting $httpBackend, flushing, etc.
+With Mox you can test a resource in 5 lines of code or less.</p>
+
+<div class="highlight highlight-javascript"><pre><span class="pl-c1">requestTest</span>()
+  .<span class="pl-c1">whenMethod</span>(FooResource.<span class="pl-c1">query</span>, { bar<span class="pl-k">:</span> baz })
+  .<span class="pl-c1">expectGet</span>(<span class="pl-s"><span class="pl-pds">'</span>api/foo?bar=baz<span class="pl-pds">'</span></span>)
+  .<span class="pl-c1">andRespond</span>([])
+  .<span class="pl-c1">run</span>();</pre></div>
+
+<p>When you test a resource that returns an object, such as <code>get()</code>, <code>andRespond({})</code> is not necessary, since
+<code>requestTest()</code> responds with <code>{}</code> by default.</p>
+
+<h2>
+<a id="utility-functions" class="anchor" href="#utility-functions" aria-hidden="true"><span class="octicon octicon-link"></span></a>Utility functions</h2>
+
+<p>Finally this framework contains a lot of utility functions:</p>
+
+<ul>
+<li>Functions to prevent injecting common stuff like <code>$q</code>, <code>$controller</code>, <code>$compile</code> and <code>$rootScope</code> in the spec</li>
+<li>Functions for quick promise and resource result mocking</li>
+<li>Function to prevent writing duplicated selectors (addSelectors)</li>
+</ul>
+
+<h3>
+<a id="generic-shortcuts-for-specs" class="anchor" href="#generic-shortcuts-for-specs" aria-hidden="true"><span class="octicon octicon-link"></span></a>Generic shortcuts for specs</h3>
+
+<ul>
+<li>
+<code>createScope</code>: Creates a new $rootScope child. The optional passed argument is an object. Also sets the created scope on the current spec.</li>
+<li>
+<code>createController(controllerName)</code>: Creates and initialized a controller.</li>
+<li>
+<code>getMockData(fileName)</code>: Asynchronously loads the contents of a JSON file. The argument is a path without '.json'.</li>
+</ul>
+
+<h3>
+<a id="compile-shortcuts" class="anchor" href="#compile-shortcuts" aria-hidden="true"><span class="octicon octicon-link"></span></a>Compile shortcuts</h3>
+
+<ul>
+<li>
+<code>compileTemplate(path, $scope)</code>: Returns a compiled and linked template and digest the $scope.</li>
+<li>
+<code>compileHtml(html, $scope)</code>: Returns compiled and linked HTML and digest the $scope. Useful for directives.</li>
+</ul>
+
+<p>The compiled element is appended to the document body and is removed in between each spec.
+When you set <code>mox.testTemplatePath</code>, a the specified template is appended to the body first and the compiled element is
+appended to the element which can be found using the CSS selector in <code>mox.testTemplateAppendSelector</code>.</p>
+
+<p>When no scope is provided, it tries to use <code>this.$scope</code> which is set by <code>createScope()</code>.
+The compiled element is set on the current spec.</p>
+
+<h3>
+<a id="promise-shortcuts" class="anchor" href="#promise-shortcuts" aria-hidden="true"><span class="octicon octicon-link"></span></a>Promise shortcuts</h3>
+
+<ul>
+<li>
+<code>defer</code>, <code>when</code>, <code>all</code>: shortcuts for <code>$q.defer</code>, <code>$q.when</code> and <code>$q.all</code>.</li>
+<li>
+<code>unresolvedPromise</code>: returns <code>$q.defer().promise</code> without resolving it.</li>
+<li>
+<code>promise(result, dontCopy)</code>: returns a promise that resolves to <code>result</code>. When <code>dontCopy</code> is false, the result object
+will be copied before resolving.</li>
+<li>
+<code>resourcePromise(result)</code>: returns a promise that resolves to <code>result</code>. The result is 'deep' copied using
+<code>angular.copy</code> so that functions on the result are not lost during copying.</li>
+<li>
+<code>restangularPromise</code>: returns a promise using <code>$q.when</code>
+</li>
+<li>
+<code>reject(message)</code>: returns a rejecting promise.</li>
+<li>
+<code>resourceResult(result, mock)</code>: returns a resource result with a resolving promise - <code>{ $promise: resultPromise }</code>.
+If you provide a mock, the functions of this mock are copied to the result as $-methods.</li>
+<li>
+<code>rejectingResourceResult</code> and <code>nonResolvingResourceResult</code> return resource results with rejecting or empty promises.</li>
+</ul>
+
+<h3>
+<a id="addselectors" class="anchor" href="#addselectors" aria-hidden="true"><span class="octicon octicon-link"></span></a>addSelectors</h3>
+
+<p>Adds helper functions to an element that simplify element selections.
+The selection is only performed when the generated helper functions are called, so these work properly with changing DOM elements.</p>
+
+<p>Example template:</p>
+
+<div class="highlight highlight-html"><pre>&lt;<span class="pl-ent">div</span>&gt;
+  &lt;<span class="pl-ent">div</span> <span class="pl-e">id</span>=<span class="pl-s"><span class="pl-pds">"</span>header<span class="pl-pds">"</span></span>&gt;&lt;/<span class="pl-ent">div</span>&gt;
+  &lt;<span class="pl-ent">div</span> <span class="pl-e">id</span>=<span class="pl-s"><span class="pl-pds">"</span>body<span class="pl-pds">"</span></span>&gt;
+    &lt;<span class="pl-ent">div</span> <span class="pl-e">class</span>=<span class="pl-s"><span class="pl-pds">"</span>foo<span class="pl-pds">"</span></span>&gt;Foo&lt;/<span class="pl-ent">div</span>&gt;
+    &lt;<span class="pl-ent">div</span> <span class="pl-e">data-test</span>=<span class="pl-s"><span class="pl-pds">"</span>bar<span class="pl-pds">"</span></span>&gt;
+      Bar &lt;<span class="pl-ent">span</span> <span class="pl-e">class</span>=<span class="pl-s"><span class="pl-pds">"</span>hl<span class="pl-pds">"</span></span>&gt;something&lt;/<span class="pl-ent">span</span>&gt;
+    &lt;/<span class="pl-ent">div</span>&gt;
+    &lt;<span class="pl-ent">div</span> <span class="pl-e">id</span>=<span class="pl-s"><span class="pl-pds">"</span>num-1-1<span class="pl-pds">"</span></span>&gt;Test 1&lt;/<span class="pl-ent">div</span>&gt;
+    &lt;<span class="pl-ent">div</span> <span class="pl-e">id</span>=<span class="pl-s"><span class="pl-pds">"</span>num-2-1<span class="pl-pds">"</span></span>&gt;Test 2&lt;/<span class="pl-ent">div</span>&gt;
+    &lt;<span class="pl-ent">div</span> <span class="pl-e">id</span>=<span class="pl-s"><span class="pl-pds">"</span>num-2-2<span class="pl-pds">"</span></span>&gt;Test 3&lt;/<span class="pl-ent">div</span>&gt;
+    &lt;<span class="pl-ent">table</span>&gt;
+      &lt;<span class="pl-ent">tbody</span>&gt;
+        &lt;<span class="pl-ent">tr</span>&gt;
+          &lt;<span class="pl-ent">td</span>&gt;Alice&lt;/<span class="pl-ent">td</span>&gt;
+          &lt;<span class="pl-ent">td</span>&gt;54&lt;/<span class="pl-ent">td</span>&gt;
+          &lt;<span class="pl-ent">td</span>&gt;Blue&lt;/<span class="pl-ent">td</span>&gt;
+        &lt;/<span class="pl-ent">tr</span>&gt;
+        &lt;<span class="pl-ent">tr</span>&gt;
+          &lt;<span class="pl-ent">td</span>&gt;Bob&lt;/<span class="pl-ent">td</span>&gt;
+          &lt;<span class="pl-ent">td</span>&gt;54&lt;/<span class="pl-ent">td</span>&gt;
+          &lt;<span class="pl-ent">td</span>&gt;Grey&lt;/<span class="pl-ent">td</span>&gt;
+        &lt;/<span class="pl-ent">tr</span>&gt;
+      &lt;/<span class="pl-ent">tbody</span>&gt;
+    &lt;/<span class="pl-ent">table</span>&gt;
+  &lt;/<span class="pl-ent">div</span>&gt;
+  &lt;<span class="pl-ent">div</span> <span class="pl-e">id</span>=<span class="pl-s"><span class="pl-pds">"</span>footer<span class="pl-pds">"</span></span>&gt;
+    &lt;<span class="pl-ent">h3</span>&gt;Footer &lt;<span class="pl-ent">span</span>&gt;title&lt;/<span class="pl-ent">span</span>&gt;&lt;/<span class="pl-ent">h3</span>&gt;
+    &lt;<span class="pl-ent">div</span>&gt;Footer &lt;<span class="pl-ent">span</span>&gt;content&lt;/<span class="pl-ent">span</span>&gt;&lt;/<span class="pl-ent">div</span>&gt;
+  &lt;/<span class="pl-ent">div</span>&gt;
+&lt;/<span class="pl-ent">div</span>&gt;</pre></div>
+
+<p>Test initialisation:</p>
+
+<div class="highlight highlight-html"><pre>var element = compileHtml(template);
+addSelectors(element, {
+  header: '[id="header"]',               // shorthand string notation
+  body: {                                // full object notation
+    selector: '#body',                   // element selector
+    sub: {                               // descendant selectors
+      foo: '.foo',
+      bar: {
+        selector: '[data-test="bar"]',
+        sub: {
+          highlight: '.hl'
+        }
+      },
+      num: '[id="num-{0}-{1}"]'          // parameter placeholders can be used
+    }
+  },
+  resultsRows: {
+    repeater: 'tbody &gt; tr',
+    children: ['name', 'age', 'eyeColor']
+  },
+  footer: {
+    selector: '#footer',
+    children: [                          // shorthand for child nodes, starting from first node
+      'heading',                         // shorthand string notation
+      {                                  // full object notation
+        name: 'content',
+        sub: {
+          innerSpan: 'span'
+        }
+      }
+    ],
+    sub: {                               // sub and children can be mixed
+      spans: 'span'                      // (as long as they don't overlap)
+    }
+  }
+});</pre></div>
+
+<p>Test code (Jasmine-style):</p>
+
+<div class="highlight highlight-javascript"><pre><span class="pl-c1">expect</span>(element.<span class="pl-c1">header</span>()).<span class="pl-c1">toExist</span>();
+
+<span class="pl-c1">expect</span>(element.<span class="pl-c1">body</span>()).<span class="pl-c1">toExist</span>();
+<span class="pl-c1">expect</span>(element.<span class="pl-c1">body</span>().<span class="pl-c1">foo</span>()).<span class="pl-c1">toExist</span>();
+<span class="pl-c1">expect</span>(element.<span class="pl-c1">body</span>().<span class="pl-c1">bar</span>()).<span class="pl-c1">toExist</span>();
+<span class="pl-c1">expect</span>(element.<span class="pl-c1">body</span>().<span class="pl-c1">bar</span>().<span class="pl-c1">highlight</span>()).<span class="pl-c1">toExist</span>();
+<span class="pl-c1">expect</span>(element.<span class="pl-c1">body</span>().<span class="pl-c1">num</span>(<span class="pl-c1">1</span>, <span class="pl-c1">1</span>)).<span class="pl-c1">toExist</span>();
+<span class="pl-c1">expect</span>(element.<span class="pl-c1">body</span>().<span class="pl-c1">num</span>(<span class="pl-c1">2</span>, <span class="pl-c1">1</span>)).<span class="pl-c1">toExist</span>();
+<span class="pl-c1">expect</span>(element.<span class="pl-c1">body</span>().<span class="pl-c1">num</span>(<span class="pl-c1">2</span>, <span class="pl-c1">2</span>)).<span class="pl-c1">toExist</span>();
+
+<span class="pl-c1">expect</span>(element.<span class="pl-c1">resultRows</span>()).<span class="pl-c1">toHaveLength</span>(<span class="pl-c1">2</span>);
+<span class="pl-c1">expect</span>(element.<span class="pl-c1">resultRows</span>(<span class="pl-c1">0</span>).<span class="pl-c1">name</span>()).<span class="pl-c1">toExist</span>();
+<span class="pl-c1">expect</span>(element.<span class="pl-c1">resultRows</span>(<span class="pl-c1">0</span>).<span class="pl-c1">age</span>()).<span class="pl-c1">toExist</span>();
+<span class="pl-c1">expect</span>(element.<span class="pl-c1">resultRows</span>(<span class="pl-c1">0</span>).<span class="pl-c1">eyeColor</span>()).<span class="pl-c1">toExist</span>();
+
+<span class="pl-c1">expect</span>(element.<span class="pl-c1">footer</span>()).<span class="pl-c1">toExist</span>();
+<span class="pl-c1">expect</span>(element.<span class="pl-c1">footer</span>().<span class="pl-c1">heading</span>()).<span class="pl-c1">toExist</span>();
+<span class="pl-c1">expect</span>(element.<span class="pl-c1">footer</span>().<span class="pl-c1">content</span>()).<span class="pl-c1">toExist</span>();
+<span class="pl-c1">expect</span>(element.<span class="pl-c1">footer</span>().<span class="pl-c1">content</span>().<span class="pl-c1">innerSpan</span>()).<span class="pl-c1">toExist</span>();
+<span class="pl-c1">expect</span>(element.<span class="pl-c1">footer</span>().<span class="pl-c1">spans</span>()).<span class="pl-c1">toHaveLength</span>(<span class="pl-c1">2</span>);</pre></div>
+
+<h2>
+<a id="contributors" class="anchor" href="#contributors" aria-hidden="true"><span class="octicon octicon-link"></span></a>Contributors</h2>
+
+<ul>
+<li><a href="https://github.com/fvanwijk">@fvanwijk</a></li>
+<li><a href="https://github.com/AlbertBrand">@AlbertBrand</a></li>
+<li><a href="https://github.com/mikewoudenberg">@mikewoudenberg</a></li>
+<li><a href="https://github.com/fwielstra">@fwielstra</a></li>
+<li><a href="https://github.com/jbnicolai">@jbnicolai</a></li>
+</ul>
+        </section>
+
+        <aside id="sidebar">
+          <a href="https://github.com/fvanwijk/mox/zipball/master" class="button">
+            <small>Download</small>
+            .zip file
+          </a>
+          <a href="https://github.com/fvanwijk/mox/tarball/master" class="button">
+            <small>Download</small>
+            .tar.gz file
+          </a>
+
+          <p class="repo-owner"><a href="https://github.com/fvanwijk/mox"></a> is maintained by <a href="https://github.com/fvanwijk">fvanwijk</a>.</p>
+
+          <p>This page was generated by <a href="https://pages.github.com">GitHub Pages</a> using the Architect theme by <a href="https://twitter.com/jasonlong">Jason Long</a>.</p>
+        </aside>
+      </div>
+    </div>
+
+  
+  </body>
+</html>
