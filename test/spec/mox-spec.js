@@ -1,3 +1,7 @@
+angular.extend(moxConfig, {
+  factory2: mox.createMock('factory', ['methodA'])
+});
+
 describe('The Mox library', function () {
 
   beforeEach(function () {
@@ -28,9 +32,14 @@ describe('The Mox library', function () {
       })
       .factory('factory', function () {
         return {
-          methodA: angular.noop,
+          methodA: function () {
+            return 'realValue';
+          },
           methodB: angular.noop
         };
+      })
+      .filter('filter2', function () {
+        return 'filterResult';
       })
       .controller('controller', function ($scope) {
         $scope.name = 'testController';
@@ -59,6 +68,77 @@ describe('The Mox library', function () {
 
   });
 
+  describe('mockServices()', function () {
+    describe('when mocking a service', function () {
+      it('should manually mock a service that is in moxConfig using the mock factory function', function () {
+        mox
+          .module('test')
+          .mockServices('factory2')
+          .run();
+
+        var spyA = mox.inject('factory').methodA;
+
+        expect(spyA()).toBeUndefined();
+        expect(spyA).toEqual(jasmine.any(Function));
+        expect(mox.inject('factory').methodB).toBeUndefined();
+      });
+
+      it('should automatically mock a service that is in moxConfig using the original service', function () {
+        mox
+          .module('test')
+          .mockServices('factory')
+          .run();
+
+        var
+          spyA = mox.inject('factory').methodA,
+          spyB = mox.inject('factory').methodB;
+
+        expect(spyA()).toBeUndefined();
+        expect(spyB()).toBeUndefined();
+        expect(spyA).toEqual(jasmine.any(Function));
+        expect(spyB).toEqual(jasmine.any(Function));
+      });
+    });
+
+    it('should replace the service with a mock instead of spying on the methods, which unsupports "calling through" the spies', function () {
+      mox
+        .module('test')
+        .mockServices('factory')
+        .run();
+
+      // Issue #9 addresses missing calling through support
+      var spy = mox.inject('factory').methodA;
+      spy.and.callThrough();
+      expect(spy()).toBeUndefined();
+    });
+
+    describe('when mocking filters (and other functions)', function () {
+      var filter;
+
+      beforeEach(function () {
+        mox
+          .module('test')
+          .mockServices('filter2Filter')
+          .run();
+        filter = mox.inject('filter2Filter');
+      });
+
+      it('should mock the filter with a spy', function () {
+        expect(filter()).toBeUndefined();
+      });
+
+      it('should not support calling through', function () {
+        // See issue #9
+        filter.and.callThrough();
+        expect(filter()).toBeUndefined();
+      });
+    });
+
+    it('should throw an error when providing no arguments', function () {
+      expect(mox.mockServices).toThrow(Error('Please provide arguments'));
+    });
+  });
+
   describe('mockConstants()', function () {
     it('should mock a constant which is mocked for the same module as the original constant', function () {
       mox
@@ -67,6 +147,10 @@ describe('The Mox library', function () {
         .run();
 
       expect(mox.inject('constant')).toEqual('newConstant');
+    });
+
+    it('should throw an error when providing no arguments', function () {
+      expect(mox.mockConstants).toThrow(Error('Please provide arguments'));
     });
   });
 
@@ -169,6 +253,10 @@ describe('The Mox library', function () {
       expect(mox.inject('directiveDirective')).toEqual({});
       expect(mox.inject('directive2Directive')).toEqual({});
     });
+
+    it('should throw an error when providing no arguments', function () {
+      expect(mox.disableDirectives).toThrow(Error('Please provide arguments'));
+    });
   });
 
   describe('mockControllers()', function () {
@@ -194,6 +282,10 @@ describe('The Mox library', function () {
       expect($scope.name).toBeUndefined();
       mox.inject('$controller')('controller2', $scope); // Controller sets $scope.name = 'testController2';
       expect($scope.name).toBeUndefined();
+    });
+
+    it('should throw an error when providing no arguments', function () {
+      expect(mox.mockControllers).toThrow(Error('Please provide arguments'));
     });
   });
 
