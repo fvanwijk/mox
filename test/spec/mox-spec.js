@@ -98,9 +98,9 @@ describe('The Mox library', function () {
     });
 
     it('should mock a the first registered directive with a newly defined version with some additional properties (name, scope, restrict and priority are not overwritable)', function () {
-      var newLinkFn = angular.noop;
-      var newCompileFn = angular.noop;
-      var newControllerFn = angular.noop;
+      var newLinkFn = function newLink() {};
+      var newCompileFn = function newCompile() {};
+      var newControllerFn = function newController() {};
       mox
         .module('test')
         .mockDirectives({
