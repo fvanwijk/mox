@@ -218,7 +218,7 @@ describe('The Mox library', function () {
           },
           template: '<div>New template</div>',
           templateUrl: 'url',
-          transclude: true,
+          transclude: true
         })
         .run();
 
@@ -236,7 +236,7 @@ describe('The Mox library', function () {
         },
         template: '<div>New template</div>',
         templateUrl: 'url',
-        transclude: true,
+        transclude: true
       }));
     });
 
