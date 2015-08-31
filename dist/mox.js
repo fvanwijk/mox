@@ -811,6 +811,7 @@ function MoxBuilder() {
             require: mock.require || undefined,
             template: mock.template || undefined,
             templateUrl: mock.templateUrl || undefined,
+            transclude: mock.transclude || undefined,
             controller: mock.controller || undefined,
             compile: mock.compile || undefined,
             link: mock.link || undefined

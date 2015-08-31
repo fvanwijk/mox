@@ -37,6 +37,7 @@
   "devDependencies": {
     "lodash": ">=0.2.0",
     "angular-mocks": "1.x",
-    "jasmine-jquery": ">=2.1.0"
+    "jasmine-jquery": ">=2.1.0",
+    "angular-resource": "~1.4.5"
   }
 }

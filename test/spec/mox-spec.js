@@ -32,7 +32,7 @@ describe('The Mox library', function () {
   });
 
   beforeEach(function () {
-    angular.module('test', ['test1a'])
+    angular.module('test', ['test1a', 'ngResource'])
       .constant('constant', 'c1')
       .directive('directive', function () {
         return {
@@ -67,6 +67,9 @@ describe('The Mox library', function () {
       })
       .filter('filter2', function () {
         return 'filterResult';
+      })
+      .factory('FooResource', function ($resource) {
+        return $resource('path');
       })
       .controller('controller', function ($scope) {
         $scope.name = 'testController';
@@ -149,6 +152,48 @@ describe('The Mox library', function () {
         // See issue #9
         filter.and.callThrough();
         expect(filter()).toBeUndefined();
+      });
+    });
+
+    describe('when mocking a resource', function () {
+      var FooResource;
+
+      beforeEach(function () {
+        mox
+          .module('test')
+          .mockServices('FooResource')
+          .run();
+        FooResource = mox.inject('FooResource');
+      });
+
+      it('should mock the resource and set the resource methods on the mock', function () {
+        expect(FooResource.get).toBeSpy();
+        expect(FooResource.$get).toBeSpy();
+      });
+
+      it('should not support calling through', function () {
+        // See issue #9
+        FooResource.and.callThrough();
+        expect(FooResource.get()).toBeUndefined();
+      });
+    });
+
+    describe('when passing multiple mock names', function () {
+      beforeEach(function () {
+        mox
+          .module('test')
+          .mockServices(
+            'factory',
+            'filter2Filter',
+            'FooResource'
+          )
+          .run();
+      });
+
+      it('should mock them all', function () {
+        expect(mox.inject('factory').methodA).toBeSpy();
+        expect(mox.inject('filter2Filter')).toBeSpy();
+        expect(mox.inject('FooResource').get).toBeSpy();
       });
     });
 
