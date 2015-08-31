@@ -5,6 +5,33 @@ angular.extend(moxConfig, {
 describe('The Mox library', function () {
 
   beforeEach(function () {
+    jasmine.addMatchers({
+      toBeSpy: function toBeSpy() {
+        return {
+          compare: function compareToBeSpy(actual) {
+            var pass = false, message;
+            if (angular.isFunction(actual)) {
+              actual();
+              if (actual.calls && actual.calls.any && actual.calls.any()) {
+                pass = true;
+                message = 'Expected ' + jasmine.pp(actual) + ' not to be a spy';
+              } else {
+                message = 'Expected ' + jasmine.pp(actual) + ' to be a spy';
+              }
+            } else {
+              message = 'Expected ' + jasmine.pp(actual) + ' to be a spy, but it is no function';
+            }
+            return {
+              pass: pass,
+              message: message
+            };
+          }
+        };
+      }
+    });
+  });
+
+  beforeEach(function () {
     angular.module('test', ['test1a'])
       .constant('constant', 'c1')
       .directive('directive', function () {
@@ -76,11 +103,8 @@ describe('The Mox library', function () {
           .mockServices('factory2')
           .run();
 
-        var spyA = mox.inject('factory').methodA;
-
-        expect(spyA()).toBeUndefined();
-        expect(spyA).toEqual(jasmine.any(Function));
-        expect(mox.inject('factory').methodB).toBeUndefined();
+        expect(mox.inject('factory').methodA).toBeSpy();
+        expect(mox.inject('factory').methodB).not.toBeSpy();
       });
 
       it('should automatically mock a service that is in moxConfig using the original service', function () {
@@ -89,14 +113,8 @@ describe('The Mox library', function () {
           .mockServices('factory')
           .run();
 
-        var
-          spyA = mox.inject('factory').methodA,
-          spyB = mox.inject('factory').methodB;
-
-        expect(spyA()).toBeUndefined();
-        expect(spyB()).toBeUndefined();
-        expect(spyA).toEqual(jasmine.any(Function));
-        expect(spyB).toEqual(jasmine.any(Function));
+        expect(mox.inject('factory').methodA).toBeSpy();
+        expect(mox.inject('factory').methodB).toBeSpy();
       });
     });
 
@@ -124,7 +142,7 @@ describe('The Mox library', function () {
       });
 
       it('should mock the filter with a spy', function () {
-        expect(filter()).toBeUndefined();
+        expect(filter).toBeSpy();
       });
 
       it('should not support calling through', function () {
@@ -341,33 +359,6 @@ describe('The Mox library', function () {
   });
 
   describe('createMock()', function () {
-    beforeEach(function () {
-      jasmine.addMatchers({
-        toBeSpy: function toBeSpy() {
-          return {
-            compare: function compareToBeSpy(actual) {
-              var pass = false, message;
-              if (angular.isFunction(actual)) {
-                actual();
-                if (actual.calls && actual.calls.any && actual.calls.any()) {
-                  pass = true;
-                  message = 'Expected ' + jasmine.pp(actual) + ' not to be a spy';
-                } else {
-                  message = 'Expected ' + jasmine.pp(actual) + ' to be a spy';
-                }
-              } else {
-                message = 'Expected ' + jasmine.pp(actual) + ' to be a spy, but it is no function';
-              }
-              return {
-                pass: pass,
-                message: message
-              };
-            }
-          };
-        }
-      });
-    });
-
     it('should create a mock object with spy functions', function () {
       var mock = mox.createMock('factory', ['methodA', 'methodB'])();
       expect(mock.methodA).toBeSpy();
