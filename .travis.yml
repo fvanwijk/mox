@@ -3,6 +3,7 @@ node_js:
   - 0.12
 before_install:
   - npm install -g npm@2.7.5
-after_script:
+before_script:
   - npm install -g codeclimate-test-reporter
-  - codeclimate < test/coverage/*/lcov.info
+after_script:
+  - codeclimate < test/coverage/**/lcov.info
