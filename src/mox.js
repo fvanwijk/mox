@@ -89,7 +89,6 @@ function MoxBuilder() {
       }
       var methodNames = [];
 
-      // TODO: recursively replace nested methods with nested spies
       angular.forEach(obj, function (method, methodName) {
         if (angular.isFunction(method)) {
           methodNames.push(methodName);

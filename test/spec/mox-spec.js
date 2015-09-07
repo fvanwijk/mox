@@ -1,5 +1,8 @@
 angular.extend(moxConfig, {
-  factory2: mox.createMock('factory', ['methodA'])
+  factory2: mox.createMock('factory', ['methodA']),
+  factory3: function ($provide, mock) {
+    $provide.value('factory3', mock);
+  }
 });
 
 describe('The Mox library', function () {
@@ -66,7 +69,7 @@ describe('The Mox library', function () {
         };
       })
       .filter('filter2', function () {
-        return 'filterResult';
+        return function () { return 'filterResult'; };
       })
       .factory('FooResource', function ($resource) {
         return $resource('path');
@@ -146,6 +149,7 @@ describe('The Mox library', function () {
 
       it('should mock the filter with a spy', function () {
         expect(filter).toBeSpy();
+        expect(filter()).toBeUndefined();
       });
 
       it('should not support calling through', function () {
@@ -175,6 +179,28 @@ describe('The Mox library', function () {
         // See issue #9
         FooResource.and.callThrough();
         expect(FooResource.get()).toBeUndefined();
+      });
+    });
+
+    describe('when passing an array, where the first value is the mock name and the other values represent arguments', function () {
+      beforeEach(function () {
+        mox
+          .module('test')
+          .mockServices(
+            ['factory3', 'argument'],
+            ['factory', 'argument']
+          )
+          .run();
+      });
+
+      it('should call the mock factory function with the passed arguments', function () {
+        expect(mox.inject('factory3')).toBe('argument');
+      });
+
+      describe('when there is no custom factory function', function () {
+        it('should do nothing with the extra arguments', function () {
+          expect(mox.inject('factory').methodA).toBeSpy();
+        });
       });
     });
 
