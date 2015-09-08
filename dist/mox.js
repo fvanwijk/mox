@@ -719,11 +719,18 @@ function MoxBuilder() {
       return methodNames;
     }
 
+    function spyOnService($provide, service, mockName) {
+      angular.forEach(getMethodNames(service), function (methodName) {
+        spyOn(service, methodName);
+      });
+      mox.save($provide, mockName, service);
+    }
     assertDeprecatedArguments(arguments);
 
     var mockNames = arguments;
 
     moduleFns.push(function mockServicesFn($provide) {
+
       var injector = angular.injector(['ng', 'ngMock'].concat(moduleNames));
 
       angular.forEach(mockNames, function (mockName) {
@@ -741,10 +748,14 @@ function MoxBuilder() {
         } else {
           var service = injector.get(mockName);
           if (service.name === 'Resource') {
-            mox.createResourceMock(mockName, getMethodNames(service))($provide);
+            spyOnService($provide, service, mockName);
           } else {
             var methodNames = angular.isObject(service) || angular.isFunction(service) ? getMethodNames(service) : undefined;
-            mox.createMock(mockName, methodNames)($provide);
+            if (methodNames === undefined) {
+              mox.createMock(mockName, methodNames)($provide);
+            } else {
+              spyOnService($provide, service, mockName);
+            }
           }
         }
       });

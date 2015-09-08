@@ -1,5 +1,5 @@
 angular.extend(moxConfig, {
-  factory2: mox.createMock('factory', ['methodA']),
+  factory2: mox.createMock('factory2', ['methodA']),
   factory3: function ($provide, mock) {
     $provide.value('factory3', mock);
   }
@@ -63,13 +63,15 @@ describe('The Mox library', function () {
       .factory('factory', function () {
         return {
           methodA: function () {
-            return 'realValue';
+            return 'methodAResult';
           },
           methodB: angular.noop
         };
       })
       .filter('filter2', function () {
-        return function () { return 'filterResult'; };
+        return function () {
+          return 'filterResult';
+        };
       })
       .factory('FooResource', function ($resource) {
         return $resource('path');
@@ -109,8 +111,8 @@ describe('The Mox library', function () {
           .mockServices('factory2')
           .run();
 
-        expect(mox.inject('factory').methodA).toBeSpy();
-        expect(mox.inject('factory').methodB).not.toBeSpy();
+        expect(mox.inject('factory2').methodA).toBeSpy();
+        expect(mox.inject('factory2').methodB).not.toBeSpy();
       });
 
       it('should automatically mock a service that is in moxConfig using the original service', function () {
@@ -124,16 +126,15 @@ describe('The Mox library', function () {
       });
     });
 
-    it('should replace the service with a mock instead of spying on the methods, which unsupports "calling through" the spies', function () {
+    it('should replace the service with a service that has spies on its methods, so that "calling through" is possible', function () {
       mox
         .module('test')
         .mockServices('factory')
         .run();
 
-      // Issue #9 addresses missing calling through support
       var spy = mox.inject('factory').methodA;
       spy.and.callThrough();
-      expect(spy()).toBeUndefined();
+      expect(spy()).toBe('methodAResult');
     });
 
     describe('when mocking filters (and other functions)', function () {
@@ -152,8 +153,7 @@ describe('The Mox library', function () {
         expect(filter()).toBeUndefined();
       });
 
-      it('should not support calling through', function () {
-        // See issue #9
+      it('should not support calling through because that can only be done on object methods', function () {
         filter.and.callThrough();
         expect(filter()).toBeUndefined();
       });
@@ -172,13 +172,12 @@ describe('The Mox library', function () {
 
       it('should mock the resource and set the resource methods on the mock', function () {
         expect(FooResource.get).toBeSpy();
-        expect(FooResource.$get).toBeSpy();
       });
 
-      it('should not support calling through', function () {
+      it('should support calling through', function () {
         // See issue #9
-        FooResource.and.callThrough();
-        expect(FooResource.get()).toBeUndefined();
+        FooResource.get.and.callThrough();
+        expect(FooResource.get().$promise).toBePromise();
       });
     });
 
