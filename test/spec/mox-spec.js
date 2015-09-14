@@ -474,4 +474,38 @@ describe('The Mox library', function () {
     });
 
   });
+
+  describe('createResourceMock()', function () {
+
+    var $provide;
+
+    beforeEach(function () {
+      mox.module('test', function (_$provide_) {
+        $provide = _$provide_;
+      }).run();
+      spyOn(mox, 'save');
+    });
+
+    it('should create a resource mock with $resource methods as unconfigured spies', function () {
+      // Pass 'get' two times to test the unique filtering using Object
+      var mock = mox.createResourceMock('FooResource', ['get', 'get'])();
+      expect(mock.get).toBeSpy();
+      expect(mock.get()).toBeUndefined();
+      expect(mock.$get()).toBeUndefined();
+    });
+
+    it('should create a resource mock that can be constructed and returns the same mock with the passed data', function () {
+      var Mock = mox.createResourceMock('FooResource', ['get'])();
+      var mockInstance = new Mock({ data: 'value' });
+
+      expect(mockInstance.data).toBe('value');
+      expect(mockInstance.get).toBeSpy();
+      expect(mockInstance.$get).toBeSpy();
+    });
+
+    it('should register the mock when $provide is passed', function () {
+      var mock = mox.createResourceMock('FooResource', ['get'])($provide);
+      expect(mox.save).toHaveBeenCalledWith($provide, 'FooResource', mock);
+    });
+  });
 });
