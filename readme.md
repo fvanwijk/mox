@@ -37,7 +37,7 @@ describe('Example of Mox', function () {
       )
       .mockServices(
         'FooService',
-        'barFilter'
+        ['$routeParams', { id: 123 }]
       )
       .mockConstants({
         fooConstant: value
@@ -150,6 +150,25 @@ mox.mockServices(
    'fooResource',
    'barService'
 )
+```
+
+When there is a mock factory defined, you could pass some arguments additional to `$provide` to this mock factory.
+
+This can of course be combined with other mocks.
+
+```javascript
+// moxConfig
+$routeParams: function ($provide, params) {
+  params = params || {};
+  mox.save($provide, '$routeParams', params);
+  return params;
+}
+
+// Spec
+mox.mockServices(
+  ['$routeParams', { id: 123 }],
+  'barService'
+);
 ```
 
 Returns the Mox instance to make chaining possible.
