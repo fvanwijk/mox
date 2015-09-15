@@ -1,6 +1,9 @@
 {
-  "name": "mox",
+  "name": "angular-mox",
+  "author": "Frank van Wijk <fvanwijk@xebia.com>",
+  "description": "Mocking utility library for AngularJS apps",
   "version": "0.4.3",
+  "main": "dist/mox.js",
   "homepage": "https://github.com/fvanwijk/mox",
   "repository": {
     "type": "git",
@@ -32,6 +35,7 @@
     "karma-phantomjs-launcher": "^0.1.4",
     "load-grunt-tasks": "^3.1.0"
   },
+  "license": "MIT",
   "scripts": {
     "test": "grunt test",
     "postinstall": "node_modules/.bin/bower install"
