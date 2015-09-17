@@ -153,9 +153,9 @@ describe('The Mox library', function () {
         expect(filter()).toBeUndefined();
       });
 
-      it('should not support calling through because that can only be done on object methods', function () {
+      it('should support calling through', function () {
         filter.and.callThrough();
-        expect(filter()).toBeUndefined();
+        expect(filter()).toBe('filterResult');
       });
     });
 

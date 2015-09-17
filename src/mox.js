@@ -33,6 +33,15 @@ function MoxBuilder() {
     }
   }
 
+  /**
+   * For now a service is a resource when the name ends with resource
+   * @param {Object} service
+   * @returns {boolean}
+   */
+  function isFilter(service) {
+    return angular.isFunction(service) && service.name !== 'Resource';
+  }
+
   cleanUp();
 
   this.factories = moxConfig; // Factory functions for creating mocks
@@ -84,11 +93,7 @@ function MoxBuilder() {
    */
   this.mockServices = function mockServices() {
     function getMethodNames(obj) {
-      if (angular.isFunction(obj) && obj.name !== 'Resource') {
-        return;
-      }
       var methodNames = [];
-
       angular.forEach(obj, function (method, methodName) {
         if (angular.isFunction(method)) {
           methodNames.push(methodName);
@@ -97,12 +102,19 @@ function MoxBuilder() {
       return methodNames;
     }
 
-    function spyOnService($provide, service, mockName) {
-      angular.forEach(getMethodNames(service), function (methodName) {
-        spyOn(service, methodName);
-      });
-      mox.save($provide, mockName, service);
+    function spyOnService(service) {
+      if (isFilter(service)) {
+        service = { filter: service };
+        spyOn(service, 'filter');
+        service = service.filter;
+      } else {
+        angular.forEach(getMethodNames(service), function (methodName) {
+          spyOn(service, methodName);
+        });
+      }
+      return service;
     }
+
     assertDeprecatedArguments(arguments);
 
     var mockNames = arguments;
@@ -125,16 +137,8 @@ function MoxBuilder() {
           mox.factories[mockName].apply(this, mockArgs);
         } else {
           var service = injector.get(mockName);
-          if (service.name === 'Resource') {
-            spyOnService($provide, service, mockName);
-          } else {
-            var methodNames = angular.isObject(service) || angular.isFunction(service) ? getMethodNames(service) : undefined;
-            if (methodNames === undefined) {
-              mox.createMock(mockName, methodNames)($provide);
-            } else {
-              spyOnService($provide, service, mockName);
-            }
-          }
+          var mock = spyOnService(service);
+          mox.save($provide, mockName, mock);
         }
       });
     });
