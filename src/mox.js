@@ -33,6 +33,22 @@ function MoxBuilder() {
     }
   }
 
+  function createResourceConstructor(resource) {
+    // Create a mocked constructor that returns the mock itself plus the data that is provided as argument
+    var fn = function (data) {
+      return angular.extend({}, resource, data);
+    };
+    resource.constructor = jasmine.createSpy('constructor');
+    if (currentSpec.isJasmine2) {
+      resource.constructor.and.callFake(fn);
+    } else {
+      resource.constructor.andCallFake(fn);
+    }
+    angular.extend(resource.constructor, resource);
+
+    return resource.constructor;
+  }
+
   /**
    * For now a service is a resource when the name ends with resource
    * @param {Object} service
@@ -111,7 +127,12 @@ function MoxBuilder() {
         angular.forEach(getMethodNames(service), function (methodName) {
           spyOn(service, methodName);
         });
+
+        if (service.name === 'Resource') {
+          service = createResourceConstructor(service);
+        }
       }
+
       return service;
     }
 
@@ -120,9 +141,6 @@ function MoxBuilder() {
     var mockNames = arguments;
 
     moduleFns.push(function mockServicesFn($provide) {
-
-      var injector = angular.injector(['ng', 'ngMock'].concat(moduleNames));
-
       angular.forEach(mockNames, function (mockName) {
         var mockArgs;
         if (angular.isArray(mockName)) {
@@ -136,9 +154,9 @@ function MoxBuilder() {
         if (mockName in mox.factories) {
           mox.factories[mockName].apply(this, mockArgs);
         } else {
-          var service = injector.get(mockName);
-          var mock = spyOnService(service);
-          mox.save($provide, mockName, mock);
+          $provide.decorator(mockName, function ($delegate) {
+            return spyOnService($delegate);
+          });
         }
       });
     });
@@ -429,21 +447,10 @@ function MoxBuilder() {
       allMethods['$' + methodName] = '$' + methodName;
     }
     angular.forEach(methodNames, addToMethodList);
-    allMethods.constructor = 'constructor';
     return function ($provide) {
       var mock = jasmine.createSpyObj(mockName, Object.keys(allMethods));
 
-      // Create a mocked constructor that returns the mock itself plus the data that is provided as argument
-      var fn = function (data) {
-        return angular.extend({}, mock, data);
-      };
-      if (currentSpec.isJasmine2) {
-        mock.constructor.and.callFake(fn);
-      } else {
-        mock.constructor.andCallFake(fn);
-      }
-
-      angular.extend(mock.constructor, mock);
+      mock = createResourceConstructor(mock);
 
       if ($provide) {
         mox.save($provide, mockName, mock.constructor);

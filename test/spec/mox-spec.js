@@ -167,6 +167,7 @@ describe('The Mox library', function () {
           .module('test')
           .mockServices('FooResource')
           .run();
+
         FooResource = mox.inject('FooResource');
       });
 
@@ -174,10 +175,27 @@ describe('The Mox library', function () {
         expect(FooResource.get).toBeSpy();
       });
 
+      it('should mock the resource, which can be constructed and returns the same mock with the passed data', function () {
+        var mockInstance = new FooResource({ data: 'value' });
+
+        expect(mockInstance.data).toBe('value');
+        expect(mockInstance.get).toBeSpy();
+      });
+
       it('should support calling through', function () {
-        // See issue #9
         FooResource.get.and.callThrough();
-        expect(FooResource.get().$promise).toBePromise();
+
+        requestTest()
+          .whenMethod(FooResource.get)
+          .expectGet('path')
+          .run();
+
+        var mockInstance = new FooResource({ data: 'value' });
+
+        requestTest()
+          .whenMethod(mockInstance.get)
+          .expectGet('path')
+          .run();
       });
     });
 
