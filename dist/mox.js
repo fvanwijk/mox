@@ -743,11 +743,15 @@ function MoxBuilder() {
     function spyOnService(service) {
       if (isFilter(service)) {
         service = { filter: service };
-        spyOn(service, 'filter');
+        if (!service.filter.isSpy) {
+          spyOn(service, 'filter');
+        }
         service = service.filter;
       } else {
         angular.forEach(getMethodNames(service), function (methodName) {
-          spyOn(service, methodName);
+          if (!service[methodName].isSpy) {
+            spyOn(service, methodName);
+          }
         });
 
         if (service.name === 'Resource') {
@@ -777,7 +781,17 @@ function MoxBuilder() {
           mox.factories[mockName].apply(this, mockArgs);
         } else {
           $provide.decorator(mockName, function ($delegate) {
-            return spyOnService($delegate);
+            if (!(mockName in mox.get)) {
+              $delegate = spyOnService($delegate);
+              mox.get[mockName] = $delegate;
+            }
+
+            return $delegate;
+          });
+
+          // Make sure that the decorator function is called
+          postInjectFns.push(function cacheMock() {
+            mox.inject(mockName);
           });
         }
       });
@@ -952,10 +966,8 @@ function MoxBuilder() {
     postInjectFns.push(function setupResultsFn() {
       var config = configFn();
       angular.forEach(config, function (mockConfig, mockName) {
-        var mock;
-        if (mockName in mox.get) {
-          mock = mox.get[mockName];
-        } else {
+        var mock = mox.inject(mockName);
+        if (!(mockName in mox.get)) {
           throw new Error(mockName + ' is not in mox.get');
         }
 
@@ -1090,3 +1102,7 @@ angular.module('mox', [])
   .service('Mox', MoxBuilder);
 
 var mox = angular.injector(['mox']).get('Mox');
+
+beforeEach(function () {
+  mox.get = {};
+});
