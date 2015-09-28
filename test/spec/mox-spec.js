@@ -1,5 +1,5 @@
 angular.extend(moxConfig, {
-  factory2: mox.createMock('factory', ['methodA']),
+  factory2: mox.createMock('factory2', ['methodA']),
   factory3: function ($provide, mock) {
     $provide.value('factory3', mock);
   }
@@ -63,13 +63,15 @@ describe('The Mox library', function () {
       .factory('factory', function () {
         return {
           methodA: function () {
-            return 'realValue';
+            return 'methodAResult';
           },
           methodB: angular.noop
         };
       })
       .filter('filter2', function () {
-        return function () { return 'filterResult'; };
+        return function () {
+          return 'filterResult';
+        };
       })
       .factory('FooResource', function ($resource) {
         return $resource('path');
@@ -109,76 +111,102 @@ describe('The Mox library', function () {
           .mockServices('factory2')
           .run();
 
-        expect(mox.inject('factory').methodA).toBeSpy();
-        expect(mox.inject('factory').methodB).not.toBeSpy();
+        expect(mox.inject('factory2').methodA).toBeSpy();
+        expect(mox.inject('factory2').methodB).not.toBeSpy();
       });
 
-      it('should automatically mock a service that is in moxConfig using the original service', function () {
+      it('should automatically mock a service that is not in moxConfig using the original service and store it in the cache', function () {
         mox
           .module('test')
           .mockServices('factory')
           .run();
 
+        expect(mox.get.factory.methodA).toBeSpy();
         expect(mox.inject('factory').methodA).toBeSpy();
         expect(mox.inject('factory').methodB).toBeSpy();
       });
-    });
 
-    it('should replace the service with a mock instead of spying on the methods, which unsupports "calling through" the spies', function () {
-      mox
-        .module('test')
-        .mockServices('factory')
-        .run();
+      it('should replace the service with a service that has spies on its methods, so that "calling through" is possible', function () {
+        mox
+          .module('test')
+          .mockServices('factory')
+          .run();
 
-      // Issue #9 addresses missing calling through support
-      var spy = mox.inject('factory').methodA;
-      spy.and.callThrough();
-      expect(spy()).toBeUndefined();
+        var spy = mox.inject('factory').methodA;
+        spy.and.callThrough();
+        expect(spy()).toBe('methodAResult');
+      });
     });
 
     describe('when mocking filters (and other functions)', function () {
-      var filter;
-
       beforeEach(function () {
         mox
           .module('test')
           .mockServices('filter2Filter')
           .run();
-        filter = mox.inject('filter2Filter');
       });
 
       it('should mock the filter with a spy', function () {
+        var filter = mox.inject('filter2Filter');
         expect(filter).toBeSpy();
         expect(filter()).toBeUndefined();
       });
 
-      it('should not support calling through', function () {
-        // See issue #9
+      it('should support calling through', function () {
+        var filter = mox.inject('filter2Filter');
         filter.and.callThrough();
-        expect(filter()).toBeUndefined();
+        expect(filter()).toBe('filterResult');
+      });
+
+      it('is stored in the cache', function () {
+        expect(mox.get.filter2Filter).toBeSpy();
       });
     });
 
     describe('when mocking a resource', function () {
-      var FooResource;
+
+      function getResource() {
+        return mox.inject('FooResource');
+      }
 
       beforeEach(function () {
         mox
           .module('test')
           .mockServices('FooResource')
           .run();
-        FooResource = mox.inject('FooResource');
       });
 
       it('should mock the resource and set the resource methods on the mock', function () {
-        expect(FooResource.get).toBeSpy();
-        expect(FooResource.$get).toBeSpy();
+        expect(getResource().get).toBeSpy();
       });
 
-      it('should not support calling through', function () {
-        // See issue #9
-        FooResource.and.callThrough();
-        expect(FooResource.get()).toBeUndefined();
+      it('should mock the resource, which can be constructed and returns the same mock with the passed data', function () {
+        var FooResource = getResource();
+        var mockInstance = new FooResource({ data: 'value' });
+
+        expect(mockInstance.data).toBe('value');
+        expect(mockInstance.get).toBeSpy();
+      });
+
+      it('should support calling through', function () {
+        var FooResource = getResource();
+        FooResource.get.and.callThrough();
+
+        requestTest()
+          .whenMethod(FooResource.get)
+          .expectGet('path')
+          .run();
+
+        var mockInstance = new FooResource({ data: 'value' });
+
+        requestTest()
+          .whenMethod(mockInstance.get)
+          .expectGet('path')
+          .run();
+      });
+
+      it('is stored in the cache', function () {
+        expect(mox.get.FooResource.get).toBeSpy();
       });
     });
 
@@ -240,6 +268,15 @@ describe('The Mox library', function () {
 
     it('should throw an error when providing no arguments', function () {
       expect(mox.mockConstants).toThrow(Error('Please provide arguments'));
+    });
+
+    it('is stored in the cache', function () {
+      mox
+        .module('test')
+        .mockConstants('constant', 'newConstant')
+        .run();
+
+      expect(mox.get.constant).toBe('newConstant');
     });
   });
 
@@ -397,7 +434,30 @@ describe('The Mox library', function () {
     });
   });
 
-  describe('saveMock()', function () {
+  describe('setupResults()', function () {
+    beforeEach(function () {
+      mox.module('test')
+        .mockServices('factory')
+        .setupResults(function () {
+          return {
+            factory: { methodA: 'mockResult' }
+          };
+        })
+        .run();
+    });
+
+    it('should setup results for the spy', function () {
+      expect(mox.get.factory.methodA()).toBe('mockResult');
+    });
+  });
+
+  describe('get', function () {
+    it('should clear the cache every test', function () {
+      expect(mox.get).toEqual({});
+    });
+  });
+
+  describe('save()', function () {
     var
       $provide,
       mockedFactory = 'mockedFactory',
