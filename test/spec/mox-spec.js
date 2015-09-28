@@ -435,19 +435,51 @@ describe('The Mox library', function () {
   });
 
   describe('setupResults()', function () {
-    beforeEach(function () {
-      mox.module('test')
-        .mockServices('factory')
-        .setupResults(function () {
-          return {
-            factory: { methodA: 'mockResult' }
-          };
-        })
-        .run();
+    function setupResults(mockServices, factory) {
+      mockServices = mockServices !== false;
+      factory = factory || {
+          methodA: 'mockResult',
+          methodB: _.constant('mockResult B')
+        };
+
+      var test = mox.module('test');
+      if (mockServices) {
+        test.mockServices('factory', 'filter2Filter');
+      }
+      return test.setupResults(function () {
+        return {
+          factory: factory,
+          filter2Filter: _.constant('filterResult mock')
+        };
+      })
+      .run;
+    }
+
+    it('should setup results for the spy object spy', function () {
+      setupResults()();
+      expect(mox.get.factory.methodA()).toBe('mockResult');
     });
 
-    it('should setup results for the spy', function () {
-      expect(mox.get.factory.methodA()).toBe('mockResult');
+    it('should setup a fake method for the spy object spy', function () {
+      setupResults()();
+      expect(mox.get.factory.methodB()).toBe('mockResult B');
+    });
+
+    it('should setup a fake method for the spy', function () {
+      setupResults()();
+      expect(mox.get.filter2Filter()).toBe('filterResult mock');
+    });
+
+    it('should throw an error if you want to setup result for a non-existing mock', function () {
+      expect(setupResults(false, {
+        methodA: {}
+      })).toThrow(Error('factory is not in mox.get'));
+    });
+
+    it('should throw an error if you want to mock a non-existent method', function () {
+      expect(setupResults(true, {
+        methodC: {}
+      })).toThrow(Error('Could not mock return value. No method methodC created in mock for factory'));
     });
   });
 
@@ -457,10 +489,10 @@ describe('The Mox library', function () {
     });
   });
 
-  describe('save()', function () {
+  describe('saveMock()', function () {
     var
       $provide,
-      mockedFactory = 'mockedFactory',
+      mockedFactory = { factory: { methodA: 'mockedFactory' } },
       mockedConstant = 'mockedConstant';
 
     beforeEach(function () {

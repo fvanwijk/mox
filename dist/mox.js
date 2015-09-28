@@ -968,6 +968,7 @@ function MoxBuilder() {
       angular.forEach(config, function (mockConfig, mockName) {
         var mock = mox.inject(mockName);
         if (!(mockName in mox.get)) {
+          cleanUp();
           throw new Error(mockName + ' is not in mox.get');
         }
 
@@ -991,6 +992,7 @@ function MoxBuilder() {
         if (typeof mockConfig === 'object' && mockConfig.constructor === Object) {
           angular.forEach(mockConfig, function (returnValue, method) {
             if (!(method in mock)) {
+              cleanUp();
               throw new Error('Could not mock return value. No method ' + method + ' created in mock for ' + mockName);
             }
             setSpyResult(mock[method], returnValue);
