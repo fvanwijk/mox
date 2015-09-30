@@ -205,6 +205,10 @@ describe('The Mox library', function () {
           .run();
       });
 
+      it('should make $-methods so that you can use then whem mocking a resource instance', function () {
+        expect(getResource().$get).toBeSpy();
+      });
+
       it('is stored in the cache', function () {
         expect(mox.get.FooResource.get).toBeSpy();
       });

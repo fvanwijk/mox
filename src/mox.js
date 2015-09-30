@@ -129,6 +129,11 @@ function MoxBuilder() {
         angular.forEach(getMethodNames(service), function (methodName) {
           if (!service[methodName].isSpy) {
             spyOn(service, methodName);
+
+            // Temporary solution to support resource instance methods immediately
+            if (service.name === 'Resource') {
+              service['$' + methodName] = jasmine.createSpy('$' + methodName);
+            }
           }
         });
 
