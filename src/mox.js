@@ -120,11 +120,11 @@ function MoxBuilder() {
 
     function spyOnService(service) {
       if (isFilter(service)) {
-        service = { filter: service };
-        if (!service.filter.isSpy) {
+        if (!service.isSpy) {
+          service = { filter: service };
           spyOn(service, 'filter');
+          service = service.filter;
         }
-        service = service.filter;
       } else {
         angular.forEach(getMethodNames(service), function (methodName) {
           if (!service[methodName].isSpy) {
