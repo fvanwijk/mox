@@ -132,10 +132,10 @@ This function tries create a resource mock or normal mock depending on the mock 
 The following mocks are created:
 
 * when mock factory exists in `moxConfig.js`: jasmine spy object with spy methods as defined in mock (factory function is executed)
-* when name ends with `Filter`: jasmine spy
-* when name ends with `Resource`: jasmine spy object with spy methods `get`, `query`, `save`, `remove`, `delete`,
-  `$get`, `$query`, `$save`, `$remove`, `$delete`
-* otherwise a jasmine spy object with spy methods from the original service
+* when service is a function: jasmine spy
+* when service is a Resource: the original service with spy methods `get`, `query`, `save`, `remove`, `delete`, `bind`,
+  `$get`, `$query`, `$save`, `$remove`, `$delete`, `$bind`
+* otherwise the original service with its methods spied upon
 
 One service:
 
@@ -314,6 +314,8 @@ When a mock is registered, you can get the mock without injecting it.
 ```javascript
 var fooService = mox.get.FooService;
 ```
+
+This cache is cleaned after every spec.
 
 ### mox.factories
 
