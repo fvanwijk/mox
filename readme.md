@@ -7,6 +7,9 @@
 When it comes to unit tests, normally a lot of boilerplate code is written to set up the mocks. This library consists of
 some utility functions to set up mocks very fast and have total control of the scope of your tests.
 
+An example project and full documentation guide is under development. Until it is finished, this readme will get you started.
+If you have any questions or feedback, please create a [Github issue](https://github.com/fvanwijk/mox/issues).
+
 ## Usage
 Copy moxConfig.js to your project test folder. Put mox.js and moxConfig.js in your karma.conf.js file list, is this order:
 
@@ -21,6 +24,9 @@ files: [
 ```
 
 ## Full usage example
+
+The following example demonstrates all functionality in one go. Despite this might probably not reflect a real use case,
+it will be useful as a cheat sheet.
 
 ```javascript
 describe('Example of Mox', function () {
@@ -91,6 +97,26 @@ describe('Example of Mox', function () {
   });
 
 });
+```
+
+## moxConfig.js
+
+The `moxConfig.js` file extends the `moxConfig` object, which contains custom mock factory functions. If you have a FooService which you want to mock,
+the mock for this service usually can be created automatically. Mox does this by injecting the service and spy on its methods.
+
+Sometimes a mock can not be derived automatically. Then you have to create a mock factory function yourself, using the `createMock` or `createResourceMock` helper function:
+
+```javascript
+`FooService: mox.createMock('FooService', ['getBars'])`
+```
+
+You could also create a mock factory by making a custom Angular config block:
+
+```javascript
+FooService: function ($provide) {
+  var mock = jasmine.createSpyObj('FooService', ['getBars']);
+  mox.save($provide, 'FooService', mock);
+}
 ```
 
 ## Mox registration methods
