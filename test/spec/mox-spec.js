@@ -438,6 +438,42 @@ describe('The Mox library', function () {
     });
   });
 
+  describe('mockTemplates', function () {
+    function mockTemplate(config) {
+      mox
+        .module('test')
+        .mockTemplates(config)
+        .run();
+
+      createScope();
+    }
+
+    it('should mock a template and replace it with a simple alternative containing the template name', function () {
+      mockTemplate('template.html');
+      compileTemplate('template.html');
+
+      expect(this.element).toHaveText('This is a mock for template.html');
+    });
+
+    it('should mock a template with a defined alternative', function () {
+      mockTemplate({ 'template.html': '<div>template</div>' });
+      compileTemplate('template.html');
+      expect(this.element).toHaveText('template');
+    });
+
+    it('should support multiple mocks', function () {
+      mox
+        .module('test')
+        .mockTemplates('template.html', { 'template2.html': '<div>template</div>' })
+        .run();
+
+      createScope();
+
+      expect(compileTemplate('template.html')).toHaveText('This is a mock for template.html');
+      expect(compileTemplate('template2.html')).toHaveText('template');
+    });
+  });
+
   describe('setupResults()', function () {
     function setupResults(mockServices, factory) {
       mockServices = mockServices !== false;
