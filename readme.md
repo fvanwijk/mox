@@ -380,7 +380,7 @@ Finally this framework contains a lot of utility functions:
 
 * `createScope`: Creates a new $rootScope child. The optional passed argument is an object. Also sets the created scope on the current spec.
 * `createController(controllerName)`: Creates and initialized a controller.
-* `getMockData(fileName)`: Asynchronously loads the contents of a JSON file. The argument is a path without '.json'.
+* `getMockData(fileName)`: Synchronously loads the contents of a JSON file that is cached by jasmine-jquery.
 
 ### Compile shortcuts
 
