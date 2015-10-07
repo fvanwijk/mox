@@ -90,11 +90,6 @@ function getMockData(path) {
   return copy(getJSONFixture(path));
 }
 
-/**
- * @deprecated Use angular.noop() instead
- */
-function noop() {}
-
 /*********************
  * Compile shortcuts *
  *********************/
@@ -152,44 +147,6 @@ function compileHtml(html, $scope, appendToBody) {
 function compileTemplate(template, $scope, appendToBody) {
   var html = mox.inject('$templateCache').get(template);
   return compileHtml('<div>' + html + '</div>', $scope, appendToBody);
-}
-
-/**
- * Compiles given html on the actual browser's DOM using window.document instead of an isolated tree.
- * The regular compileHtml() function is preferred as it's faster and does not require manual cleanup.
- * Only use this function when you cannot trigger browser behaviour using compileHtml().
- *
- * Be sure to clean up the generated HTML afterwards by calling removeCompiledHtmlFromDom() in an afterEach.
- * @param {string} html
- * @param {Object} $scope
- * @returns the created element on window.document.body.
- *
- * @deprecated We want all elements to be appended to document body via default via compileHtml
- */
-function compileHtmlOnDom(html, $scope) {
-  var element = compileHtml(html, $scope);
-  var body = mox.inject('$document').find('body');
-
-  var containerId = 'test-input-container';
-  var findElementContainer = function () {
-    return body.find('#' + containerId);
-  };
-
-  if (findElementContainer().length < 1) {
-    body.append('<div id="' + containerId + '"></div>');
-  }
-  findElementContainer().append(element);
-
-  return element;
-}
-
-/**
- * Remove the html that was created using compileHtmlOnDom() from the DOM
- *
- * @deprecated
- */
-function removeCompiledHtmlFromDom() {
-  return mox.inject('$document').find('body').find('#test-input-container').remove();
 }
 
 /*********************
@@ -270,33 +227,6 @@ function rejectingResourceResult(errorMessage) {
 /********************************
  * Util functions for viewspecs *
  ********************************/
-
-/**
- * based on protractor's findBindings / by.binding selector
- * https://github.com/angular/protractor/blob/master/lib/clientsidescripts.js#L44
- * 'extends' the given jquery element with a findBinding method to locate an element by its
- * angularjs binding. Avoids having to add IDs or classes to elements to make them findable
- * in view specs. Returns a jquery-wrapped (list of) items.
- *
- * @deprecated This method is barely used and it is easier to find a suitable CSS selector
- */
-function extendElement(element) {
-  element.findBinding = function (binding) {
-    var bindings = element.find('.ng-binding');
-    var matches = [];
-    angular.forEach(bindings, function (bindingElem) {
-      var dataBinding = angular.element(bindingElem).data('$binding');
-      if (dataBinding) {
-        var bindingName = dataBinding.exp || dataBinding[0].exp || dataBinding;
-        if (bindingName.indexOf(binding) !== -1) {
-          matches.push(bindingElem);
-        }
-      }
-    });
-    return angular.element(matches);
-  };
-  return element;
-}
 
 /**
  * Extends an angular DOM element with attributes that are found on the element.
@@ -661,11 +591,7 @@ function MoxBuilder() {
       return angular.extend({}, resource, data);
     };
     resource.constructor = jasmine.createSpy('constructor');
-    if (currentSpec.isJasmine2) {
-      resource.constructor.and.callFake(fn);
-    } else {
-      resource.constructor.andCallFake(fn);
-    }
+    spyCallFake(resource.constructor, fn);
     angular.extend(resource.constructor, resource);
 
     return resource.constructor;
@@ -678,6 +604,22 @@ function MoxBuilder() {
    */
   function isFilter(service) {
     return angular.isFunction(service) && service.name !== 'Resource';
+  }
+
+  function spyCallFake(spy, callback) {
+    if (currentSpec.isJasmine2) {
+      spy.and.callFake(callback);
+    } else {
+      spy.andCallFake(callback);
+    }
+  }
+
+  function spyReturn(spy, returnValue) {
+    if (currentSpec.isJasmine2) {
+      spy.and.returnValue(returnValue);
+    } else {
+      spy.andReturn(returnValue);
+    }
   }
 
   cleanUp();
@@ -978,18 +920,10 @@ function MoxBuilder() {
         }
 
         function setSpyResult(spy, returnValue) {
-          if (typeof returnValue === 'function' || false) {
-            if (currentSpec.isJasmine2) {
-              spy.and.callFake(returnValue);
-            } else {
-              spy.andCallFake(returnValue);
-            }
+          if (typeof returnValue === 'function') {
+            spyCallFake(spy, returnValue);
           } else {
-            if (currentSpec.isJasmine2) {
-              spy.and.returnValue(returnValue);
-            } else {
-              spy.andReturn(returnValue);
-            }
+            spyReturn(spy, returnValue);
           }
         }
 
