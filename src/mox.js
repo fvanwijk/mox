@@ -72,7 +72,7 @@ function MoxBuilder() {
    */
   this.inject = function inject(name) {
     if (!currentSpec.$injector) {
-      throw Error('Sorry, cannot inject ' + name + ' because the injector is not ready yet. Please call mox.run() or inject()');
+      throw Error('Sorry, cannot inject ' + name + ' because the injector is not ready yet. Please load a module and call mox.run() or inject()');
     }
     var args = Array.prototype.slice.call(arguments, 0);
     var injects = {};

@@ -7,7 +7,7 @@ describe('The helper functions', function () {
 
     describe('inject()', function () {
       it('should throw an exception when the injector is not yet ready', function () {
-        expect(_.partial(mox.inject, 'x')).toThrow(Error('Sorry, cannot inject x because the injector is not ready yet. Please call mox.run() or inject()'));
+        expect(_.partial(mox.inject, 'x')).toThrow(Error('Sorry, cannot inject x because the injector is not ready yet. Please load a module and call mox.run() or inject()'));
       });
 
       describe('when there is one argument provided', function () {
