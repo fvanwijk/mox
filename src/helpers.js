@@ -171,13 +171,6 @@ function promise(result, dontCopy) {
 }
 
 /**
- * @deprecated use resourcePromise, which does the same
- */
-function restangularPromise(result) {
-  return mox.inject('$q').when(angular.copy(result));
-}
-
-/**
  * A resolved $resource promise must contain $-methods, so JSON-copy is not possible
  */
 function resourcePromise(result) {
