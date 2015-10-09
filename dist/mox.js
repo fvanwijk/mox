@@ -153,10 +153,6 @@ function compileTemplate(template, $scope, appendToBody) {
  * Promise shortcuts *
  *********************/
 
-function defer() {
-  return mox.inject('$q').defer();
-}
-
 function when() {
   /* jshint -W040 */
   return mox.inject('$q').when.apply(this, arguments);
@@ -167,13 +163,11 @@ function all() {
 }
 
 function unresolvedPromise() {
-  return defer().promise;
+  return mox.inject('$q').defer().promise;
 }
 
 function promise(result, dontCopy) {
-  var deferred = defer();
-  deferred.resolve(dontCopy ? result : copy(result));
-  return deferred.promise;
+  return mox.inject('$q').when(dontCopy ? result : copy(result));
 }
 
 /**
@@ -187,9 +181,7 @@ function restangularPromise(result) {
  * A resolved $resource promise must contain $-methods, so JSON-copy is not possible
  */
 function resourcePromise(result) {
-  var deferred = defer();
-  deferred.resolve(angular.copy(result));
-  return deferred.promise;
+  return mox.inject('$q').when(angular.copy(result));
 }
 
 function reject(error) {

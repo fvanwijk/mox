@@ -171,20 +171,6 @@ describe('The helper functions', function () {
     });
 
     describe('promise shortcuts', function () {
-      describe('defer()', function () {
-        it('should return a deferred', function () {
-          var deferred = defer();
-
-          expect(deferred.promise).toBePromise();
-          deferred.resolve('resolve');
-          expect(deferred.promise).toResolveWith('resolve');
-
-          deferred = defer();
-          deferred.reject('reject');
-          expect(deferred.promise).toRejectWith('reject');
-        });
-      });
-
       describe('when()', function () {
         it('should return a resolving promise', function () {
           expect(when('resolve')).toResolveWith('resolve');
