@@ -214,54 +214,6 @@ function rejectingResourceResult(errorMessage) {
  ********************************/
 
 /**
- * Extends an angular DOM element with attributes that are found on the element.
- *
- * e.g.
- * <div class="container">
- *   <h1>The container</h1>
- *   <p class="sub">with a subtitle</p>
- * </div>
- *
- * var element = extendedElement(rootElement.find('.container'), {title: 'h1', subtitle: 'p.sub'});
- * element.title.text() // The container
- *
- * @deprecated use addSelectors
- */
-function extendedElement(e, extensions) {
-  var exts = {};
-  angular.forEach(extensions, function (value, key) {
-    exts[key] = e.find(value);
-  });
-  return angular.extend(e, exts);
-}
-
-/**
- * Extends an angular DOM element with attributes that are their children
- *
- * e.g.
- * <table><thead><tr>
- *   <th>Your name</th><th> Your age</th>
- * </tr></thead></table>
- *
- * var element = extendedElementWithChildren(rootElement.find('table thead tr'), ['name','age']);
- * element.name.text() // Your name
- *
- * @deprecated use addSelectors
- */
-function extendedElementWithChildren(e, keys) {
-  var children = [];
-  angular.forEach(e.children(), function (child) {
-    children.push(angular.element(child));
-  });
-
-  var pairs = {};
-  angular.forEach(children, function (value, i) {
-    pairs[keys[i]] = value;
-  });
-  return angular.extend(e, pairs);
-}
-
-/**
  * Adds helper functions to an element that simplify element selections.
  * The selection is only performed when the generated helper functions are called, so
  * these work properly with changing DOM elements.
