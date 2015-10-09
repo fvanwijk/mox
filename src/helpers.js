@@ -60,15 +60,6 @@ function createController(ctrlName, $scope, locals) {
   return mox.inject('$controller')(ctrlName, angular.extend({ $scope: $scope || currentSpec.$scope }, locals || {}));
 }
 
-/**
- * Depends on jasmine-jquery
- * @param {String} path
- * @returns {*}
- */
-function getMockData(path) {
-  return copy(getJSONFixture(path));
-}
-
 /*********************
  * Compile shortcuts *
  *********************/
