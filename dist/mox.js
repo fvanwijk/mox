@@ -61,27 +61,6 @@ function createController(ctrlName, $scope, locals) {
 }
 
 /**
- * Mock the current date.
- * Specs that use Date depend on the current date
- * will introduce unreliable behaviour when the current date is not mocked.
- * @param {string} dateString
- *
- * @deprecated This function requires too much external dependencies.
- * Jasmine 2.x can mock the date with jasmine.clock().mockDate(new Date(dateString))
- */
-function mockDate(dateString) {
-  var clock;
-
-  beforeEach(function () {
-    clock = sinon.useFakeTimers(+new Date(dateString));
-  });
-
-  afterEach(function () {
-    clock.restore();
-  });
-}
-
-/**
  * Depends on jasmine-jquery
  * @param {String} path
  * @returns {*}
