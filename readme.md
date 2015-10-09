@@ -72,7 +72,7 @@ describe('Example of Mox', function () {
       })
       .mockTemplates(
         'scripts/views/template1.html',
-        'scripts/views/template2.html',
+        { 'scripts/views/template2.html' : '<div>template2</div>' },
       )
       .mockControllers('ChildController')
       .run();
@@ -303,7 +303,7 @@ to already be initialized, which is done after calling `run()`.
 
 ```javascript
 mox.mockTemplates(
-  'scripts/views/templatename.html',
+  'scripts/views/templateName.html',
   { 'scripts/views/anotherTemplate.html': '<tr><td></td></tr>' }
 )
 ```
