@@ -400,6 +400,21 @@ describe('The helper functions', function () {
         expect(element.withChild().child1().noMatch()).not.toExist();
       });
 
+      it('should add full object child selector with children of sub', function () {
+        addSelectors(element, {
+          withChild: {
+            selector: 'element',
+            children: [{
+              name: 'child1',
+              children: ['subChild']
+            }]
+          }
+        });
+        expect(element.withChild()).toExist();
+        expect(element.withChild().child1()).toExist();
+        expect(element.withChild().child1().subChild()).toExist();
+      });
+
       it('should replace placeholders in selectors', function () {
         addSelectors(element, {
           placeholder: 'element #{0}'
