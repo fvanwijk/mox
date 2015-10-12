@@ -443,12 +443,12 @@ function addSelectors(element, selectors) {
 
   function addChildFn(element, children) {
     angular.forEach(children, function (child, idx) {
-      var name = angular.isObject(child) ? child.name : child,
-        sub = child.sub;
+      var name = angular.isObject(child) ? child.name : child;
 
       checkAndSetFn(element, name, function moxExtendElement() {
         var childElement = element.children().eq(idx);
-        addSelectors(childElement, sub);
+        addSelectors(childElement, child.sub);
+        addChildFn(childElement, child.children);
         return childElement;
       });
     });
