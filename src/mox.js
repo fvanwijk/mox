@@ -430,10 +430,12 @@ function MoxBuilder() {
 
     return function ($provide, nameOverride) {
 
-      var mock = angular.isUndefined(mockedMethods) ? jasmine.createSpy(mockName) // Spy
-        : (mockedMethods === false ?
-          undefined // Value or constant
-          : jasmine.createSpyObj(mockName, mockedMethods)); // Object with spies
+      var mock;
+      if (angular.isUndefined(mockedMethods)) {
+        mock = jasmine.createSpy(mockName);
+      } else if (mockedMethods !== false) {
+        mock = jasmine.createSpyObj(mockName, mockedMethods);
+      }
 
       if ($provide) {
         mox.save($provide, nameOverride || mockName, mock, mockedMethods === false ? 'constant' : undefined);
