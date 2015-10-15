@@ -39,11 +39,7 @@ function MoxBuilder() {
       return angular.extend({}, resource, data);
     };
     resource.constructor = jasmine.createSpy('constructor');
-    if (currentSpec.isJasmine2) {
-      resource.constructor.and.callFake(fn);
-    } else {
-      resource.constructor.andCallFake(fn);
-    }
+    spyCallFake(resource.constructor, fn)
     angular.extend(resource.constructor, resource);
 
     return resource.constructor;
@@ -56,6 +52,22 @@ function MoxBuilder() {
    */
   function isFilter(service) {
     return angular.isFunction(service) && service.name !== 'Resource';
+  }
+
+  function spyCallFake(spy, callback) {
+    if (currentSpec.isJasmine2) {
+      spy.and.callFake(callback);
+    } else {
+      spy.andCallFake(callback);
+    }
+  }
+
+  function spyReturn(spy, returnValue) {
+    if (currentSpec.isJasmine2) {
+      spy.and.returnValue(returnValue);
+    } else {
+      spy.andReturn(returnValue);
+    }
   }
 
   cleanUp();
@@ -357,17 +369,9 @@ function MoxBuilder() {
 
         function setSpyResult(spy, returnValue) {
           if (typeof returnValue === 'function') {
-            if (currentSpec.isJasmine2) {
-              spy.and.callFake(returnValue);
-            } else {
-              spy.andCallFake(returnValue);
-            }
+            spyCallFake(spy, returnValue);
           } else {
-            if (currentSpec.isJasmine2) {
-              spy.and.returnValue(returnValue);
-            } else {
-              spy.andReturn(returnValue);
-            }
+            spyReturn(spy, returnValue);
           }
         }
 
