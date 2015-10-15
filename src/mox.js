@@ -356,7 +356,7 @@ function MoxBuilder() {
         }
 
         function setSpyResult(spy, returnValue) {
-          if (typeof returnValue === 'function' || false) {
+          if (typeof returnValue === 'function') {
             if (currentSpec.isJasmine2) {
               spy.and.callFake(returnValue);
             } else {
