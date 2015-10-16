@@ -7,7 +7,9 @@
 When it comes to unit tests, normally a lot of boilerplate code is written to set up the mocks. This library consists of
 some utility functions to set up mocks very fast and have total control of the scope of your tests.
 
-An example project and full documentation guide is under development. Until it is finished, this readme will get you started.
+Full documentation guide is under development. Until it is finished, this readme will get you started.
+Check out this [example project](https://github.com/fvanwijk/mox-example) to see how easy Mox is integrated into your project.
+
 If you have any questions or feedback, please create a [Github issue](https://github.com/fvanwijk/mox/issues).
 
 ## Usage
