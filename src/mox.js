@@ -39,7 +39,7 @@ function MoxBuilder() {
       return angular.extend({}, resource, data);
     };
     resource.constructor = jasmine.createSpy('constructor');
-    spyCallFake(resource.constructor, fn)
+    spyCallFake(resource.constructor, fn);
     angular.extend(resource.constructor, resource);
 
     return resource.constructor;
