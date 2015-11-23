@@ -459,14 +459,14 @@ describe('The helper functions', function () {
       });
 
       it('should throw an exception when trying to overwrite existing properties on the element', function () {
-        expect(function() {
+        expect(function () {
           addSelectors(element, {
             val: 'element'
           });
         }).toThrow();
 
         element.abc = '1';
-        expect(function() {
+        expect(function () {
           addSelectors(element, {
             abc: 'element'
           });

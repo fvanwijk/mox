@@ -40,7 +40,7 @@ module.exports = function (grunt) {
         }
       },
       test: {
-        src: ['test/<%= paths.src %>/**/*.js']
+        src: ['<%= paths.test %>/spec/**/*.js']
       }
     },
 
