@@ -123,11 +123,6 @@ function compileTemplate(template, $scope, appendToBody) {
  * Promise shortcuts *
  *********************/
 
-function when() {
-  /* jshint -W040 */
-  return mox.inject('$q').when.apply(this, arguments);
-}
-
 function unresolvedPromise() {
   return mox.inject('$q').defer().promise;
 }

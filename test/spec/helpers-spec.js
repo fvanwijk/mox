@@ -171,13 +171,6 @@ describe('The helper functions', function () {
     });
 
     describe('promise shortcuts', function () {
-      describe('when()', function () {
-        it('should return a resolving promise', function () {
-          expect(when('resolve')).toResolveWith('resolve');
-          expect(when(promise('resolve'))).toResolveWith('resolve');
-        });
-      });
-
       describe('unresolvedPromise()', function () {
         it('should return a promise that is unresolved', function () {
           expect(unresolvedPromise()).toBePromise();
