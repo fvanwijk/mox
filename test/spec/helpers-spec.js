@@ -178,13 +178,6 @@ describe('The helper functions', function () {
         });
       });
 
-      describe('all()', function () {
-        it('should return a multi-resolving promise', function () {
-          expect(all(['resolve'])).toResolveWith(['resolve']);
-          expect(all([when('resolve')])).toResolveWith(['resolve']);
-        });
-      });
-
       describe('unresolvedPromise()', function () {
         it('should return a promise that is unresolved', function () {
           expect(unresolvedPromise()).toBePromise();
