@@ -25,7 +25,6 @@
     "grunt-jscs": "^1.6.0",
     "grunt-jsonlint": "^1.0.4",
     "grunt-karma": "^0.10.1",
-    "grunt-lintspaces": "^0.6.2",
     "istanbul": "^0.3.17",
     "jasmine-core": "^2.2.0",
     "jshint-stylish": "^1.0.1",
