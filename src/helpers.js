@@ -60,41 +60,6 @@ function createController(ctrlName, $scope, locals) {
   return mox.inject('$controller')(ctrlName, angular.extend({ $scope: $scope || currentSpec.$scope }, locals || {}));
 }
 
-/**
- * Mock the current date.
- * Specs that use Date depend on the current date
- * will introduce unreliable behaviour when the current date is not mocked.
- * @param {string} dateString
- *
- * @deprecated This function requires too much external dependencies.
- * Jasmine 2.x can mock the date with jasmine.clock().mockDate(new Date(dateString))
- */
-function mockDate(dateString) {
-  var clock;
-
-  beforeEach(function () {
-    clock = sinon.useFakeTimers(+new Date(dateString));
-  });
-
-  afterEach(function () {
-    clock.restore();
-  });
-}
-
-/**
- * Depends on jasmine-jquery
- * @param {String} path
- * @returns {*}
- */
-function getMockData(path) {
-  return copy(getJSONFixture(path));
-}
-
-/**
- * @deprecated Use angular.noop() instead
- */
-function noop() {}
-
 /*********************
  * Compile shortcuts *
  *********************/
@@ -154,85 +119,23 @@ function compileTemplate(template, $scope, appendToBody) {
   return compileHtml('<div>' + html + '</div>', $scope, appendToBody);
 }
 
-/**
- * Compiles given html on the actual browser's DOM using window.document instead of an isolated tree.
- * The regular compileHtml() function is preferred as it's faster and does not require manual cleanup.
- * Only use this function when you cannot trigger browser behaviour using compileHtml().
- *
- * Be sure to clean up the generated HTML afterwards by calling removeCompiledHtmlFromDom() in an afterEach.
- * @param {string} html
- * @param {Object} $scope
- * @returns the created element on window.document.body.
- *
- * @deprecated We want all elements to be appended to document body via default via compileHtml
- */
-function compileHtmlOnDom(html, $scope) {
-  var element = compileHtml(html, $scope);
-  var body = mox.inject('$document').find('body');
-
-  var containerId = 'test-input-container';
-  var findElementContainer = function () {
-    return body.find('#' + containerId);
-  };
-
-  if (findElementContainer().length < 1) {
-    body.append('<div id="' + containerId + '"></div>');
-  }
-  findElementContainer().append(element);
-
-  return element;
-}
-
-/**
- * Remove the html that was created using compileHtmlOnDom() from the DOM
- *
- * @deprecated
- */
-function removeCompiledHtmlFromDom() {
-  return mox.inject('$document').find('body').find('#test-input-container').remove();
-}
-
 /*********************
  * Promise shortcuts *
  *********************/
 
-function defer() {
-  return mox.inject('$q').defer();
-}
-
-function when() {
-  /* jshint -W040 */
-  return mox.inject('$q').when.apply(this, arguments);
-}
-
-function all() {
-  return mox.inject('$q').all.apply(this, arguments);
-}
-
 function unresolvedPromise() {
-  return defer().promise;
+  return mox.inject('$q').defer().promise;
 }
 
 function promise(result, dontCopy) {
-  var deferred = defer();
-  deferred.resolve(dontCopy ? result : copy(result));
-  return deferred.promise;
-}
-
-/**
- * @deprecated use resourcePromise, which does the same
- */
-function restangularPromise(result) {
-  return mox.inject('$q').when(angular.copy(result));
+  return mox.inject('$q').when(dontCopy ? result : copy(result));
 }
 
 /**
  * A resolved $resource promise must contain $-methods, so JSON-copy is not possible
  */
 function resourcePromise(result) {
-  var deferred = defer();
-  deferred.resolve(angular.copy(result));
-  return deferred.promise;
+  return mox.inject('$q').when(angular.copy(result));
 }
 
 function reject(error) {
@@ -270,81 +173,6 @@ function rejectingResourceResult(errorMessage) {
 /********************************
  * Util functions for viewspecs *
  ********************************/
-
-/**
- * based on protractor's findBindings / by.binding selector
- * https://github.com/angular/protractor/blob/master/lib/clientsidescripts.js#L44
- * 'extends' the given jquery element with a findBinding method to locate an element by its
- * angularjs binding. Avoids having to add IDs or classes to elements to make them findable
- * in view specs. Returns a jquery-wrapped (list of) items.
- *
- * @deprecated This method is barely used and it is easier to find a suitable CSS selector
- */
-function extendElement(element) {
-  element.findBinding = function (binding) {
-    var bindings = element.find('.ng-binding');
-    var matches = [];
-    angular.forEach(bindings, function (bindingElem) {
-      var dataBinding = angular.element(bindingElem).data('$binding');
-      if (dataBinding) {
-        var bindingName = dataBinding.exp || dataBinding[0].exp || dataBinding;
-        if (bindingName.indexOf(binding) !== -1) {
-          matches.push(bindingElem);
-        }
-      }
-    });
-    return angular.element(matches);
-  };
-  return element;
-}
-
-/**
- * Extends an angular DOM element with attributes that are found on the element.
- *
- * e.g.
- * <div class="container">
- *   <h1>The container</h1>
- *   <p class="sub">with a subtitle</p>
- * </div>
- *
- * var element = extendedElement(rootElement.find('.container'), {title: 'h1', subtitle: 'p.sub'});
- * element.title.text() // The container
- *
- * @deprecated use addSelectors
- */
-function extendedElement(e, extensions) {
-  var exts = {};
-  angular.forEach(extensions, function (value, key) {
-    exts[key] = e.find(value);
-  });
-  return angular.extend(e, exts);
-}
-
-/**
- * Extends an angular DOM element with attributes that are their children
- *
- * e.g.
- * <table><thead><tr>
- *   <th>Your name</th><th> Your age</th>
- * </tr></thead></table>
- *
- * var element = extendedElementWithChildren(rootElement.find('table thead tr'), ['name','age']);
- * element.name.text() // Your name
- *
- * @deprecated use addSelectors
- */
-function extendedElementWithChildren(e, keys) {
-  var children = [];
-  angular.forEach(e.children(), function (child) {
-    children.push(angular.element(child));
-  });
-
-  var pairs = {};
-  angular.forEach(children, function (value, i) {
-    pairs[keys[i]] = value;
-  });
-  return angular.extend(e, pairs);
-}
 
 /**
  * Adds helper functions to an element that simplify element selections.
