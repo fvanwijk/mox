@@ -1,7 +1,7 @@
 {
   "name": "mox",
   "main": "dist/mox.js",
-  "version": "0.6.0",
+  "version": "0.6.1",
   "authors": [
     "Frank van Wijk <fvanwijk@xebia.com>"
   ],
@@ -28,8 +28,6 @@
     "package.json",
     "wallaby.conf.js"
   ],
-  "dependencies": {
-  },
-  "devDependencies": {
-  }
+  "dependencies": {},
+  "devDependencies": {}
 }
