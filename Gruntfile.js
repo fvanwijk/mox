@@ -1,50 +1,32 @@
 module.exports = function (grunt) {
   require('load-grunt-tasks')(grunt);
 
+  var paths = {
+    src: 'src',
+    test: 'test',
+    dist: 'dist'
+  };
+
   grunt.initConfig({
     pkg: grunt.file.readJSON('bower.json'),
-    paths: {
-      src: 'src',
-      test: 'test',
-      dist: 'dist'
-    },
     clean: {
-      dist: 'dist',
-      coverage: 'test/coverage'
+      dist: paths.dist,
+      coverage: paths.test + '/coverage'
     },
-    jshint: {
-      options: {
-        jshintrc: '.jshintrc',
-        reporter: require('jshint-stylish')
-      },
-      all: {
+    concat: {
+      dist: {
         src: [
-          'Gruntfile.js',
-          '<%= paths.src %>/**/*.js'
-        ]
-      },
-      test: {
-        options: {
-          jshintrc: 'test/.jshintrc'
-        },
-        src: ['<%= paths.test %>/spec/{,*/}*.js']
+          paths.src + '/**/*.js',
+          '!' + paths.src + '/moxConfig.js'
+        ],
+        dest: paths.dist + '/<%= pkg.name %>.js'
       }
     },
-    jscs: {
-      options: {
-        config: './.jscsrc'
-      },
-      all: {
-        files: {
-          src: ['<%= paths.src %>/**/*.js']
-        }
-      },
-      test: {
-        src: ['<%= paths.test %>/spec/**/*.js']
+    copy: {
+      dist: {
+        src: paths.src + '/moxConfig.js',
+        dest: paths.dist + '/moxConfig.js'
       }
-    },
-    jsonlint: {
-      src: '<%= paths.test %>/mock/**/*.json'
     },
     coverage: {
       dist: {
@@ -56,31 +38,44 @@ module.exports = function (grunt) {
             lines: 47
           },
           dir: 'coverage',
-          root: '<%= paths.test %>'
+          root: paths.test
         }
       }
     },
-    copy: {
-      dist: {
-        src: '<%= paths.src %>/moxConfig.js',
-        dest: '<%= paths.dist %>/moxConfig.js'
-      }
+    jscs: {
+      options: {
+        config: './.jscsrc'
+      },
+      src: {
+        src: paths.src + '/**/*.js'
+      },
+      test: {
+        src: paths.test + '/spec/**/*.js'
+      },
+      config: ['*.js', paths.test + '/{,!(spec)}/*.js']
     },
-    concat: {
-      dist: {
-        src: [
-          '<%= paths.src %>/**/*.js',
-          '!<%= paths.src %>/moxConfig.js'
-        ],
-        dest: '<%= paths.dist %>/<%= pkg.name %>.js'
-      }
+    jshint: {
+      options: {
+        jshintrc: '.jshintrc',
+        reporter: require('jshint-stylish')
+      },
+      src: {
+        src: paths.src + '/**/*.js'
+      },
+      test: {
+        options: {
+          jshintrc: paths.test + '/.jshintrc'
+        },
+        src: paths.test + '/spec/**/*.js'
+      },
+      config: ['*.js', paths.test + '/{,!(spec)}/*.js']
     },
     uglify: {
       dist: {
         expand: true,
-        cwd: '<%= paths.dist %>/',
+        cwd: paths.dist + '/',
         src: ['*.js', '!moxConfig.js'],
-        dest: '<%= paths.dist %>',
+        dest: paths.dist + '',
         ext: '.min.js'
       }
     },
@@ -88,25 +83,11 @@ module.exports = function (grunt) {
       dist: {
         configFile: 'karma.conf.js'
       }
-    },
-    watch: {
-      karma: {
-        files: ['Gruntfile.js', '<%= paths.src %>/**/*.js', '<%= paths.test %>/spec/**/*.js'],
-        tasks: ['test']
-      }
-    },
-    bump: {
-      options: {
-        files: ['package.json', 'bower.json'],
-        commitFiles: ['package.json', 'bower.json'],
-        commitMessage: 'Bump version to v%VERSION%',
-        push: false
-      }
     }
   });
 
   grunt.registerTask('build', ['clean', 'test', 'copy', 'concat', 'uglify']);
-  grunt.registerTask('test', ['jscs', 'jshint', 'jsonlint', 'karma', 'coverage']);
+  grunt.registerTask('test', ['jscs', 'jshint', 'karma', 'coverage']);
   grunt.registerTask('default', ['build']);
 
 };

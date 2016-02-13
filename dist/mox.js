@@ -448,6 +448,16 @@ function requestTest() {
   return test;
 }
 
+var moxConfig = {};
+angular.module('mox', [])
+  .service('Mox', MoxBuilder);
+
+var mox = angular.injector(['mox']).get('Mox');
+
+beforeEach(function () {
+  mox.get = {};
+});
+
 /**
  * Constructor function for a Mox object
  */
@@ -477,7 +487,7 @@ function MoxBuilder() {
     postInjectFns = [];
   }
 
-  function assertDeprecatedArguments (args) {
+  function assertDeprecatedArguments(args) {
     if (!args[0]) {
       throw Error('Please provide arguments');
     }
@@ -937,13 +947,3 @@ function MoxBuilder() {
 
   return this;
 }
-
-var moxConfig = {};
-angular.module('mox', [])
-  .service('Mox', MoxBuilder);
-
-var mox = angular.injector(['mox']).get('Mox');
-
-beforeEach(function () {
-  mox.get = {};
-});

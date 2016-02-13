@@ -3,13 +3,13 @@ module.exports = function (config) {
     basePath: '',
     frameworks: ['jasmine'],
     files: [
-      'bower_components/lodash/lodash.js',
-      'bower_components/jquery/dist/jquery.js',
-      'bower_components/angular/angular.js',
-      'bower_components/angular-resource/angular-resource.js',
-      'bower_components/angular-mocks/angular-mocks.js',
-      'bower_components/jasmine-jquery/lib/jasmine-jquery.js',
-      'bower_components/jasmine-mox-matchers/src/jasmine-mox-matchers.js',
+      'node_modules/lodash/lodash.js',
+      'node_modules/jquery/dist/jquery.js',
+      'node_modules/angular/angular.js',
+      'node_modules/angular-resource/angular-resource.js',
+      'node_modules/angular-mocks/angular-mocks.js',
+      'node_modules/jasmine-jquery/lib/jasmine-jquery.js',
+      'node_modules/jasmine-mox-matchers/src/jasmine-mox-matchers.js',
 
       'src/**/*.js',
 
@@ -34,7 +34,7 @@ module.exports = function (config) {
     captureTimeout: 5000,
     logLevel: config.LOG_ERROR,
     autoWatch: false,
-    browsers: ['PhantomJS'],
+    browsers: ['PhantomJS2'],
     singleRun: true
   });
 };
