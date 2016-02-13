@@ -2,7 +2,7 @@
   "name": "angular-mox",
   "author": "Frank van Wijk <fvanwijk@xebia.com>",
   "description": "Mocking utility library for AngularJS apps",
-  "version": "0.6.1",
+  "version": "0.6.2",
   "main": "dist/mox.js",
   "homepage": "https://github.com/fvanwijk/mox",
   "repository": {
