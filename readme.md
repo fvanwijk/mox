@@ -3,6 +3,8 @@
 [![Build Status](https://travis-ci.org/fvanwijk/mox.svg?branch=master)](https://travis-ci.org/fvanwijk/mox)
 [![Test Coverage](https://codeclimate.com/github/fvanwijk/mox/badges/coverage.svg)](https://codeclimate.com/github/fvanwijk/mox)
 [![Code Climate](https://codeclimate.com/github/fvanwijk/mox/badges/gpa.svg)](https://codeclimate.com/github/fvanwijk/mox)
+[![devDependency Status](https://david-dm.org/fvanwijk/mox/dev-status.svg)](https://david-dm.org/fvanwijk/mox#info=devDependencies)
+[![Dependency Status](https://david-dm.org/fvanwijk/mox.svg)](https://david-dm.org/fvanwijk/mox)
 
 When it comes to unit tests, normally a lot of boilerplate code is written to set up the mocks. This library consists of
 some utility functions to set up mocks very fast and have total control of the scope of your tests.
