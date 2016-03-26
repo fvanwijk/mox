@@ -450,7 +450,7 @@ Example template:
 
 Test initialisation:
 
-```html
+```javascript
 var element = compileHtml(template);
 addSelectors(element, {
   header: '[id="header"]',               // shorthand string notation
@@ -522,3 +522,4 @@ expect(element.footer().spans()).toHaveLength(2);
 * [@fwielstra](https://github.com/fwielstra)
 * [@jbnicolai](https://github.com/jbnicolai)
 * [@wietsevenema](https://github.com/wietsevenema)
+* [@jillesme](https://github.com/jillesme)
