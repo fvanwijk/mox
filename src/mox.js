@@ -263,7 +263,7 @@ function MoxBuilder() {
             template: mock.template || undefined,
             templateUrl: mock.templateUrl || undefined,
             transclude: mock.transclude || undefined,
-            controller: mock.controller || undefined,
+            controller: mock.controller || angular.noop,
             compile: mock.compile || undefined,
             link: mock.link || undefined
           });

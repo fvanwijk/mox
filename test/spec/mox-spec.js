@@ -299,7 +299,7 @@ describe('The Mox library', function () {
           key: '='
         },
         require: undefined,
-        controller: undefined,
+        controller: angular.noop,
         templateUrl: undefined,
         template: undefined,
         link: undefined,
