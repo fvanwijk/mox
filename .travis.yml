@@ -1,9 +1,7 @@
 language: node_js
 node_js:
-  - 5.4
+  - 4.4
 before_install:
-  - npm install -g npm@2.7.5 grunt-cli
-before_script:
-  - npm install -g codeclimate-test-reporter
+  - npm install -g grunt-cli codeclimate-test-reporter
 after_script:
   - codeclimate-test-reporter < test/coverage/**/lcov.info
