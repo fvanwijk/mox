@@ -22,7 +22,7 @@ module.exports = function (config) {
     captureTimeout: 5000,
     logLevel: config.LOG_ERROR,
     autoWatch: false,
-    browsers: ['PhantomJS2'],
+    browsers: ['PhantomJS'],
     singleRun: true
   });
 };
