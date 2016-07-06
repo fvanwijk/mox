@@ -454,7 +454,7 @@ Example template:
 
 Test initialisation:
 
-```html
+```javascript
 var element = compileHtml(template);
 addSelectors(element, {
   header: '[id="header"]',               // shorthand string notation
