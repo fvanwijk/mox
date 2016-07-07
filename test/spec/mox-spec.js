@@ -60,6 +60,11 @@ describe('The Mox library', function () {
           template: '<div>Directive 2</div>'
         };
       })
+      .component('component1', {
+        bindings: {
+          key: '<'
+        }
+      })
       .factory('factory', function () {
         return {
           methodA: function () {
@@ -309,6 +314,19 @@ describe('The Mox library', function () {
         index: 0,
         restrict: 'AE'
       }));
+    });
+
+    it('should mock directives/components that use bindToController properly so isolate scope properties can be bound', function () {
+      mox
+        .module('test')
+        .mockDirectives('component1')
+        .run();
+
+      var $scope = createScope({
+        keyValue: 'foo'
+      });
+      var element = compileHtml('<component1 key="keyValue"></component1>', $scope);
+      expect(element.isolateScope().$ctrl.key).toEqual($scope.keyValue);
     });
 
     it('should mock a the first registered directive with a newly defined version with some additional properties (name, scope, restrict and priority are not overwritable)', function () {
