@@ -5,3 +5,4 @@ bower_components/
 test/coverage
 .idea
 .bower.json
+dist
