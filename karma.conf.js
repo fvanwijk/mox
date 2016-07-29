@@ -7,6 +7,30 @@ module.exports = function (config) {
     files: karmaFiles.files,
     exclude: karmaFiles.exclude,
     port: 8080,
+    plugins: [
+      require('karma-jasmine'),
+      require('karma-webpack'),
+      require('karma-phantomjs-launcher'),
+      require('karma-coverage'),
+      require('karma-sourcemap-loader')
+    ],
+    webpack: {
+      module: {
+        loaders: [
+          {
+            test: /\.js$/,
+            exclude: /node_modules/,
+            loader: 'babel'
+          },
+          {
+            test: /\.js$/,
+            include: /src/,
+            loader: 'isparta'
+          }
+        ]
+      },
+      devtool: 'inline-source-map'
+    },
     reporters: ['progress', 'coverage'],
     coverageReporter: {
       dir: 'test/coverage',
@@ -17,7 +41,8 @@ module.exports = function (config) {
       ]
     },
     preprocessors: {
-      'src/**/*.js': ['coverage']
+      'src/**/*.js': ['webpack', 'coverage', 'sourcemap'],
+      'test/spec/**/*.js': ['webpack', 'sourcemap']
     },
     captureTimeout: 5000,
     logLevel: config.LOG_ERROR,
