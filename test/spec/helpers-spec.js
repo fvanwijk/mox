@@ -85,6 +85,11 @@ describe('The helper functions', function () {
         var controller = createController('FooController', createScope(), { FooService: 'mocked service' });
         expect(controller.FooService).toBe('mocked service');
       });
+
+      it('should pass bindings if passed', function () {
+        var controller = createController('FooController', createScope(), { FooService: 'mocked service' }, { binding: 42 });
+        expect(controller.binding).toBe(42);
+      });
     });
   });
 

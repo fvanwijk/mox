@@ -54,10 +54,13 @@ function createScope(params) {
  * @param {string} ctrlName controller to create
  * @param {Object} $scope to inject into the created controller. If not given, look if there is a scope created with createScope().
  * @param {Object} [locals] optional local injections
+ * @param {Object} [bindings] optional bindings parameter, for testing controllers of directives that use `bindToController`
  * @returns {*}
  */
-function createController(ctrlName, $scope, locals) {
-  return mox.inject('$controller')(ctrlName, angular.extend({ $scope: $scope || currentSpec.$scope }, locals || {}));
+function createController(ctrlName, $scope, locals, bindings) {
+  var scope = $scope || currentSpec.$scope;
+  var combinedLocals = angular.extend({ $scope: scope }, locals || {});
+  return mox.inject('$controller')(ctrlName, combinedLocals, bindings);
 }
 
 /*********************
