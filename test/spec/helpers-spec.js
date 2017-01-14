@@ -1,4 +1,11 @@
+import {mox} from '../../src/mox';
+var m = mox.helpers;
+
 describe('The helper functions', function () {
+
+  beforeEach(function () {
+    angular.module('mox', []);
+  });
 
   describe('Test helpers', function () {
     beforeEach(function () {
@@ -7,20 +14,20 @@ describe('The helper functions', function () {
 
     describe('inject()', function () {
       it('should throw an exception when the injector is not yet ready', function () {
-        expect(_.partial(mox.inject, 'x')).toThrow(Error('Sorry, cannot inject x because the injector is not ready yet. Please load a module and call mox.run() or inject()'));
+        expect(_.partial(m.inject, 'x')).toThrow(Error('Sorry, cannot inject x because the injector is not ready yet. Please load a module and call mox.run() or mox.helpers.inject()'));
       });
 
       describe('when there is one argument provided', function () {
         it('should return the service that is requested', function () {
           mox.module('mox').run();
-          expect(mox.inject('x')).toBe(1);
+          expect(m.inject('x')).toBe(1);
         });
       });
 
       describe('when there are multiple arguments provided', function () {
         it('should return an object containing the services that are requested', function () {
           mox.module('mox').run();
-          expect(mox.inject('x', 'y')).toEqual({
+          expect(m.inject('x', 'y')).toEqual({
             x: 1,
             y: 2
           });
@@ -30,24 +37,24 @@ describe('The helper functions', function () {
   });
 
   describe('Angular shortcuts', function () {
-    describe('createScope()', function () {
+    describe('m.createScope()', function () {
       beforeEach(function () {
         mox.module('mox').run();
       });
 
       it('should return a new non-isolate scope', inject(function ($rootScope) {
-        var newScope = createScope();
+        var newScope = m.createScope();
         expect(newScope.$id).not.toBe($rootScope.$id);
         expect(newScope.$parent).toBe($rootScope);
       }));
 
       it('should fill the scope with the parameters', function () {
-        expect(createScope({ key: 'value', key2: 'value2' })).toEqual(jasmine.objectContaining({ key: 'value', key2: 'value2' }));
+        expect(m.createScope({ key: 'value', key2: 'value2' })).toEqual(jasmine.objectContaining({ key: 'value', key2: 'value2' }));
       });
 
       it('should set the created scope on the currentSpec', function () {
-        var newScope = createScope();
-        var anotherScope = createScope();
+        var newScope = m.createScope();
+        var anotherScope = m.createScope();
         expect(this.$scope).not.toBe(newScope);
         expect(this.$scope).toBe(anotherScope);
       });
@@ -67,22 +74,22 @@ describe('The helper functions', function () {
       });
 
       it('should instantiate a controller with the last created scope', function () {
-        var newScope = createScope();
-        var controller = createController('FooController');
+        var newScope = m.createScope();
+        var controller = m.createController('FooController');
         expect(controller.$scope).toBe(newScope);
         expect(controller.FooService.foo).toBe('bar');
       });
 
       it('should instantiate a controller with the given scope', inject(function () {
-        var newScope = createScope();
-        var anotherScope = createScope();
-        var controller = createController('FooController', newScope);
+        var newScope = m.createScope();
+        var anotherScope = m.createScope();
+        var controller = m.createController('FooController', newScope);
         expect(controller.$scope).toBe(newScope);
         expect(controller.$scope).not.toBe(anotherScope);
       }));
 
       it('should override injections if passed', function () {
-        var controller = createController('FooController', createScope(), { FooService: 'mocked service' });
+        var controller = m.createController('FooController', m.createScope(), { FooService: 'mocked service' });
         expect(controller.FooService).toBe('mocked service');
       });
     });
@@ -93,32 +100,32 @@ describe('The helper functions', function () {
       mox.module('mox').run();
     });
 
-    describe('compileHtml()', function () {
+    describe('m.compileHtml()', function () {
       it('should compile HTML and link it to the given scope', function () {
-        expect(compileHtml('<div id="test">{{scopeVar}}</div>', createScope({ scopeVar: 'contents' }))).toHaveText('contents');
+        expect(m.compileHtml('<div id="test">{{scopeVar}}</div>', m.createScope({ scopeVar: 'contents' }))).toHaveText('contents');
       });
 
       describe('when there is not scope passed as argument', function () {
         it('should link to the last created scope', function () {
-          createScope({ scopeVar: 'contents' });
-          expect(compileHtml('<div id="test">{{scopeVar}}</div>')).toHaveText('contents');
+          m.createScope({ scopeVar: 'contents' });
+          expect(m.compileHtml('<div id="test">{{scopeVar}}</div>')).toHaveText('contents');
         });
       });
 
       it('should add the element to the current spec', function () {
-        expect(compileHtml('<div></div>', createScope())).toBe(this.element);
+        expect(m.compileHtml('<div></div>', m.createScope())).toBe(this.element);
       });
 
       describe('when the appendToBody parameter is not given or is truthy', function () {
         it('should append the compiled and linked element directly to the body', function () {
-          compileHtml('<div id="test"></div>', createScope());
+          m.compileHtml('<div id="test"></div>', m.createScope());
           expect(angular.element(document.body).find('#test')).toExist();
           expect(angular.element(document.body).find('#container #test')).not.toExist();
         });
 
         it('should only append the compile element to the body once', function () {
-          compileHtml('<div id="test"></div>', createScope());
-          compileHtml('<div id="test2"></div>', createScope());
+          m.compileHtml('<div id="test"></div>', m.createScope());
+          m.compileHtml('<div id="test2"></div>', m.createScope());
           expect(angular.element(document.body).find('#test')).not.toExist();
         });
 
@@ -130,7 +137,7 @@ describe('The helper functions', function () {
           });
 
           it('should append the test template to the body and append the compiled element to the element in the test template with the testTemplateAppendSelector', function () {
-            compileHtml('<div id="test"></div>', createScope());
+            m.compileHtml('<div id="test"></div>', m.createScope());
             expect(angular.element(document.body).find('#container #test')).toExist();
           });
         });
@@ -138,7 +145,7 @@ describe('The helper functions', function () {
 
       describe('when the appendToBody parameter is falsy', function () {
         it('should not append the compiled and linked element to the body', function () {
-          compileHtml('<div id="test"></div>', createScope(), false);
+          m.compileHtml('<div id="test"></div>', m.createScope(), false);
           var elem = angular.element(document.body).find('#test');
           expect(elem).not.toExist();
         });
@@ -153,19 +160,17 @@ describe('The helper functions', function () {
       });
 
       it('should retrieve the template, compile its HTML contents and link to the given scope', function () {
-        expect(compileTemplate('test.html', createScope({ scopeVar: 'contents' }))).toHaveText('contents');
+        expect(m.compileTemplate('test.html', m.createScope({ scopeVar: 'contents' }))).toHaveText('contents');
       });
 
       it('should wrap the template in a div, in case the template has no root element', function () {
-        expect(compileTemplate('test.html', createScope()).find('#test')).toExist();
+        expect(m.compileTemplate('test.html', m.createScope()).find('#test')).toExist();
       });
 
       it('should pass the scope and appendToBody parameter to the function that compiles the HTML', function () {
-        var origCompileHtml = compileHtml;
-        compileHtml = jasmine.createSpy('compileHtml');
-        compileTemplate('test.html', createScope(), true);
-        expect(compileHtml).toHaveBeenCalledWith(jasmine.any(String), this.$scope, true);
-        compileHtml = origCompileHtml;
+        spyOn(mox.helpers, 'compileHtml');
+        m.compileTemplate('test.html', m.createScope(), true);
+        expect(m.compileHtml).toHaveBeenCalledWith(jasmine.any(String), this.$scope, true);
       });
 
     });
@@ -173,26 +178,26 @@ describe('The helper functions', function () {
     describe('promise shortcuts', function () {
       describe('unresolvedPromise()', function () {
         it('should return a promise that is unresolved', function () {
-          expect(unresolvedPromise()).toBePromise();
-          expect(unresolvedPromise()).not.toResolve();
+          expect(m.unresolvedPromise()).toBePromise();
+          expect(m.unresolvedPromise()).not.toResolve();
         });
       });
 
       describe('promise()', function () {
         it('should return a promise that resolves with the JSON-copied argument', function () {
           var resolve = { resolve: true, $save: angular.noop };
-          expect(promise(resolve)).toResolveWith(function (result) {
+          expect(m.promise(resolve)).toResolveWith(function (result) {
             expect(result).not.toBe(resolve);
             expect(result).not.toEqual(resolve);
             expect(result).toEqual(_.omit(resolve, '$save'));
           });
 
-          expect(promise(promise('resolve'))).toResolveWith(promise('resolve'));
+          expect(m.promise(m.promise('resolve'))).toResolveWith(m.promise('resolve'));
         });
 
         it('should not copy the argument when resolving', function () {
           var resolve = { resolve: true };
-          expect(promise(resolve, true)).toResolveWith(function (result) {
+          expect(m.promise(resolve, true)).toResolveWith(function (result) {
             expect(result).toBe(resolve);
           });
         });
@@ -204,7 +209,7 @@ describe('The helper functions', function () {
             $save: angular.noop,
             data: 'result'
           };
-          expect(resourcePromise(resource)).toResolveWith(function (result) {
+          expect(m.resourcePromise(resource)).toResolveWith(function (result) {
             expect(result).toEqual(resource);
             expect(result).not.toBe(resource);
           });
@@ -213,7 +218,7 @@ describe('The helper functions', function () {
 
       describe('reject()', function () {
         it('should return a rejecting promise', function () {
-          expect(reject('reject')).toRejectWith('reject');
+          expect(m.reject('reject')).toRejectWith('reject');
         });
       });
 
@@ -224,7 +229,7 @@ describe('The helper functions', function () {
             data: 'result'
           };
 
-          expect(resourceResult(resourceData).$promise).toResolveWith(function (result) {
+          expect(m.resourceResult(resourceData).$promise).toResolveWith(function (result) {
             expect(result).not.toBe(resourceData);
             expect(result).not.toEqual(resourceData);
             expect(result).toEqual(_.omit(resourceData, '$save'));
@@ -237,7 +242,7 @@ describe('The helper functions', function () {
           };
           var mock = { $save: angular.noop };
 
-          expect(resourceResult(resourceData, mock).$promise).toResolveWith(function (result) {
+          expect(m.resourceResult(resourceData, mock).$promise).toResolveWith(function (result) {
             expect(result).toEqual(_.extend(mock, {
               data: 'result'
             }));
@@ -246,25 +251,25 @@ describe('The helper functions', function () {
         });
       });
 
-      describe('nonResolvingResourceResult()', function () {
+      describe('m.nonResolvingResourceResult()', function () {
         it('should return a resource result that does not resolve', function () {
-          var result = nonResolvingResourceResult();
-          expect(result).toEqual({ $promise: mox.inject('$q').defer().promise });
+          var result = m.nonResolvingResourceResult();
+          expect(result).toEqual({ $promise: m.inject('$q').defer().promise });
           expect(result.$promise).not.toResolve();
         });
       });
 
-      describe('rejectingResourceResult()', function () {
+      describe('m.rejectingResourceResult()', function () {
         it('should return a resource result that rejects', function () {
-          expect(rejectingResourceResult('reject').$promise).toRejectWith('reject');
+          expect(m.rejectingResourceResult('reject').$promise).toRejectWith('reject');
         });
       });
     });
 
-    describe('addSelectors()', function () {
+    describe('m.addSelectors()', function () {
       var element;
       beforeEach(function () {
-        element = compileHtml('\
+        element = m.compileHtml('\
         <root>\
           <element>\
             <child id="1">\
@@ -273,11 +278,11 @@ describe('The helper functions', function () {
             <child id="2"></child>\
           </element>\
         </root>\
-        ', createScope());
+        ', m.createScope());
       });
 
       it('should add simple selector', function () {
-        addSelectors(element, {
+        m.addSelectors(element, {
           simple: 'element',
           noMatch: 'xyz'
         });
@@ -286,7 +291,7 @@ describe('The helper functions', function () {
       });
 
       it('should support object notation', function () {
-        addSelectors(element, {
+        m.addSelectors(element, {
           full: {
             selector: 'element'
           }
@@ -295,7 +300,7 @@ describe('The helper functions', function () {
       });
 
       it('should add simple sub selectors', function () {
-        addSelectors(element, {
+        m.addSelectors(element, {
           withSub: {
             selector: 'element',
             sub: {
@@ -312,7 +317,7 @@ describe('The helper functions', function () {
       });
 
       it('should add full object sub selector with sub of sub', function () {
-        addSelectors(element, {
+        m.addSelectors(element, {
           withSub: {
             selector: 'element',
             sub: {
@@ -341,7 +346,7 @@ describe('The helper functions', function () {
       });
 
       it('should add simple child selectors', function () {
-        addSelectors(element, {
+        m.addSelectors(element, {
           withChild: {
             selector: 'element',
             children: ['child1', 'child2', 'child3']
@@ -354,7 +359,7 @@ describe('The helper functions', function () {
       });
 
       it('should add full object child selector with sub of sub', function () {
-        addSelectors(element, {
+        m.addSelectors(element, {
           withChild: {
             selector: 'element',
             children: [{
@@ -373,7 +378,7 @@ describe('The helper functions', function () {
       });
 
       it('should add full object child selector with children of sub', function () {
-        addSelectors(element, {
+        m.addSelectors(element, {
           withChild: {
             selector: 'element',
             children: [{
@@ -388,7 +393,7 @@ describe('The helper functions', function () {
       });
 
       it('should replace placeholders in selectors', function () {
-        addSelectors(element, {
+        m.addSelectors(element, {
           placeholder: 'element #{0}'
         });
         expect(element.placeholder()).not.toExist();
@@ -396,14 +401,14 @@ describe('The helper functions', function () {
         expect(element.placeholder(2)).toExist();
         expect(element.placeholder(3)).not.toExist();
 
-        addSelectors(element, {
+        m.addSelectors(element, {
           placeholder2: '{0} {1}'
         });
         expect(element.placeholder2('element', 'child')).toExist();
       });
 
       it('should allow grouping of selectors without parent selectors', function () {
-        addSelectors(element, {
+        m.addSelectors(element, {
           group1: {
             sub: {
               element: '#1'
@@ -421,10 +426,10 @@ describe('The helper functions', function () {
 
       it('should allow overwriting existing selector functions on the element', function () {
         expect(element.root).toBeUndefined();
-        addSelectors(element, {
+        m.addSelectors(element, {
           element: '#1'
         });
-        addSelectors(element, {
+        m.addSelectors(element, {
           element: '#2'
         });
         expect(element.element()).toHaveAttr('id', '1');
@@ -432,21 +437,21 @@ describe('The helper functions', function () {
 
       it('should throw an exception when trying to overwrite existing properties on the element', function () {
         expect(function () {
-          addSelectors(element, {
+          m.addSelectors(element, {
             val: 'element'
           });
         }).toThrow();
 
         element.abc = '1';
         expect(function () {
-          addSelectors(element, {
+          m.addSelectors(element, {
             abc: 'element'
           });
         }).toThrow();
       });
 
       it('should support repeater definitions', function () {
-        addSelectors(element, {
+        m.addSelectors(element, {
           childElements: {
             repeater: 'element > child',
             sub: {
@@ -461,7 +466,7 @@ describe('The helper functions', function () {
       });
 
       it('should ignore the children and sub definitions for the repeater itself', function () {
-        addSelectors(element, {
+        m.addSelectors(element, {
           childElements: {
             repeater: 'element > child',
             sub: {
@@ -486,90 +491,90 @@ describe('The helper functions', function () {
     });
 
     it('should setup the test', function () {
-      var test = requestTest();
+      var test = m.requestTest();
       expect(test._httpMethod).toBe('GET');
       expect(test._data).toBeNull();
     });
 
     it('should set the path', function () {
-      expect(requestTest().whenPath('path')._path).toBe('path');
+      expect(m.requestTest().whenPath('path')._path).toBe('path');
     });
 
     it('should set the method with arguments', function () {
-      var test = requestTest().whenMethod('get', 'arg1', 'arg2');
+      var test = m.requestTest().whenMethod('get', 'arg1', 'arg2');
       expect(test._method).toBe('get');
       expect(test._methodArguments).toEqual(['arg1', 'arg2']);
     });
 
     it('should have whenCall as alias for whenMethod', function () {
-      expect(requestTest().whenCall('get')._method).toBe('get');
+      expect(m.requestTest().whenCall('get')._method).toBe('get');
     });
 
     it('should set the httpMethod', function () {
-      expect(requestTest().whenHttpMethod('PUT')._httpMethod).toBe('PUT');
+      expect(m.requestTest().whenHttpMethod('PUT')._httpMethod).toBe('PUT');
     });
 
     it('should set the data', function () {
-      expect(requestTest().whenData('data')._data).toBe('data');
+      expect(m.requestTest().whenData('data')._data).toBe('data');
     });
 
     it('should set the httpMethod, path and data in one call', function () {
-      var test = requestTest().expectRequest('GET', 'path', 'data');
+      var test = m.requestTest().expectRequest('GET', 'path', 'data');
       expect(test._httpMethod).toBe('GET');
       expect(test._path).toBe('path');
       expect(test._data).toBe('data');
     });
 
     it('should set the response', function () {
-      var test = requestTest().andRespond('response');
+      var test = m.requestTest().andRespond('response');
       expect(test._response).toBe('response');
       expect(test._expectedResult).toBe('response');
     });
 
     it('should set the expectation', function () {
-      expect(requestTest().andExpect('response')._expectedResult).toBe('response');
+      expect(m.requestTest().andExpect('response')._expectedResult).toBe('response');
     });
 
     it('should set the httpMethod GET and path', function () {
-      var test = requestTest().expectGet('path', 'data'); // data is omitted
+      var test = m.requestTest().expectGet('path', 'data'); // data is omitted
       expect(test._httpMethod).toBe('GET');
       expect(test._path).toBe('path');
       expect(test._data).toBeUndefined();
     });
 
     it('should set the httpMethod POST, with data and path', function () {
-      var test = requestTest().expectPost('path', 'data');
+      var test = m.requestTest().expectPost('path', 'data');
       expect(test._httpMethod).toBe('POST');
       expect(test._path).toBe('path');
       expect(test._data).toBe('data');
     });
 
     it('should set the httpMethod PUT, with data and path', function () {
-      var test = requestTest().expectPut('path', 'data');
+      var test = m.requestTest().expectPut('path', 'data');
       expect(test._httpMethod).toBe('PUT');
       expect(test._path).toBe('path');
       expect(test._data).toBe('data');
     });
 
     it('should set the httpMethod DELETE and path', function () {
-      var test = requestTest().expectDelete('path', 'data');
+      var test = m.requestTest().expectDelete('path', 'data');
       expect(test._httpMethod).toBe('DELETE');
       expect(test._path).toBe('path');
       expect(test._data).toBe('data');
     });
 
     it('should set the expected query params', function () {
-      expect(requestTest().expectQueryParams({ param1: 'param1' })._expectedQueryParams).toEqual({ param1: 'param1' });
+      expect(m.requestTest().expectQueryParams({ param1: 'param1' })._expectedQueryParams).toEqual({ param1: 'param1' });
     });
 
     describe('when testing the resource', function () {
       it('should pass when testing the resource', function () {
         function callMethod(args) {
           expect(args).toBe('args');
-          return mox.inject('$http').post('path?param1=param1', { data: 'data' });
+          return m.inject('$http').post('path?param1=param1', { data: 'data' });
         }
 
-        requestTest()
+        m.requestTest()
           .whenMethod(callMethod, 'args')
           .expectPost('path', { data: 'data' })
           .expectQueryParams({ param1: 'param1' })
@@ -578,10 +583,10 @@ describe('The helper functions', function () {
 
       it('should pass when providing the path without queryParams', function () {
         function callMethod() {
-          return mox.inject('$http').post('path');
+          return m.inject('$http').post('path');
         }
 
-        requestTest()
+        m.requestTest()
           .whenMethod(callMethod)
           .expectPost('path')
           .run();
@@ -589,10 +594,10 @@ describe('The helper functions', function () {
 
       it('should pass when not providing the path but only queryParams', function () {
         function callMethod() {
-          return mox.inject('$http').post('path?param1=param1', { data: 'data' });
+          return m.inject('$http').post('path?param1=param1', { data: 'data' });
         }
 
-        requestTest()
+        m.requestTest()
           .whenMethod(callMethod)
           .expectQueryParams({ param1: 'param1' })
           .expectPost()
@@ -601,13 +606,13 @@ describe('The helper functions', function () {
 
       it('should test a failing resource call', function () {
         function callMethod() {
-          return mox.inject('$http').post('path')
+          return m.inject('$http').post('path')
             .then(function () {
-              return reject('reject');
+              return m.reject('reject');
             });
         }
 
-        requestTest()
+        m.requestTest()
           .whenMethod(callMethod)
           .expectPost('path')
           .fail();
@@ -615,10 +620,10 @@ describe('The helper functions', function () {
 
       it('should test with a resolving resource call and do additional tests', function () {
         function callMethod() {
-          return mox.inject('$http').post('path');
+          return m.inject('$http').post('path');
         }
 
-        requestTest()
+        m.requestTest()
           .whenMethod(callMethod)
           .expectPost('path')
           .andExpect(function (response) {
@@ -629,13 +634,13 @@ describe('The helper functions', function () {
 
       it('should test with a resolving resource call and do additional tests', function () {
         function callMethod() {
-          return mox.inject('$http').post('path')
+          return m.inject('$http').post('path')
             .then(function () {
-              return reject('reject');
+              return m.reject('reject');
             });
         }
 
-        requestTest()
+        m.requestTest()
           .whenMethod(callMethod)
           .expectPost('path')
           .andExpect(function (response) {

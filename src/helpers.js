@@ -2,6 +2,27 @@
  * Helper functions *
  *******************************/
 
+import {mox} from './mox';
+
+export var helpers = {
+  copy,
+  inject: syncInject,
+  createScope,
+  createController,
+  compileHtml,
+  compileTemplate,
+  unresolvedPromise,
+  promise,
+  resourcePromise,
+  reject,
+  resourceResult,
+  nonResolvingResourceResult,
+  rejectingResourceResult,
+  addSelectors,
+  requestTest
+};
+
+//function beforeEach() {}
 // Save the current spec for later use (Jasmine 2 compatibility)
 var currentSpec;
 beforeEach(function () {
@@ -34,13 +55,31 @@ function copy(input) {
  *******************************/
 
 /**
+ * Injects one or multiple services and returns them
+ *
+ * @param {string} name of the inject to get
+ * @returns {Object}
+ */
+function syncInject(name) {
+  if (!currentSpec.$injector) {
+    throw Error('Sorry, cannot inject ' + name + ' because the injector is not ready yet. Please load a module and call mox.run() or mox.helpers.inject()');
+  }
+  var args = Array.prototype.slice.call(arguments, 0);
+  var injects = {};
+  angular.forEach(args, function (injectName) {
+    injects[injectName] = currentSpec.$injector.get(injectName);
+  });
+  return args.length === 1 ? injects[name] : injects;
+}
+
+/**
  * Create a new scope that is a child of $rootScope.
  *
  * @param {Object} [params] optional variables to bind to the $scope
  * @returns {Object}
  */
 function createScope(params) {
-  var $scope = mox.inject('$rootScope').$new();
+  var $scope = syncInject('$rootScope').$new();
   if (params) {
     angular.extend($scope, params);
   }
@@ -57,7 +96,7 @@ function createScope(params) {
  * @returns {*}
  */
 function createController(ctrlName, $scope, locals) {
-  return mox.inject('$controller')(ctrlName, angular.extend({ $scope: $scope || currentSpec.$scope }, locals || {}));
+  return syncInject('$controller')(ctrlName, angular.extend({ $scope: $scope || currentSpec.$scope }, locals || {}));
 }
 
 /*********************
@@ -93,14 +132,13 @@ function compileHtml(html, $scope, appendToBody) {
   $scope = $scope || currentSpec.$scope;
   if (appendToBody === undefined) { appendToBody = true; }
 
-  var element = mox.inject('$compile')(html)($scope);
+  var element = syncInject('$compile')(html)($scope);
   var body = angular.element(document.body);
   body.find(mox.testTemplateAppendSelector).remove();
   if (appendToBody) {
     var testTemplate = mox.testTemplatePath ? jasmine.getFixtures().read(mox.testTemplatePath) : angular.element('<div id="mox-container">');
     body.append(testTemplate).find(mox.testTemplateAppendSelector).append(element);
   }
-
   currentSpec.element = element;
   $scope.$digest();
   return currentSpec.element;
@@ -115,8 +153,8 @@ function compileHtml(html, $scope, appendToBody) {
  * @returns the created element
  */
 function compileTemplate(template, $scope, appendToBody) {
-  var html = mox.inject('$templateCache').get(template);
-  return compileHtml('<div>' + html + '</div>', $scope, appendToBody);
+  var html = syncInject('$templateCache').get(template);
+  return this.compileHtml('<div>' + html + '</div>', $scope, appendToBody);
 }
 
 /*********************
@@ -124,22 +162,22 @@ function compileTemplate(template, $scope, appendToBody) {
  *********************/
 
 function unresolvedPromise() {
-  return mox.inject('$q').defer().promise;
+  return syncInject('$q').defer().promise;
 }
 
 function promise(result, dontCopy) {
-  return mox.inject('$q').when(dontCopy ? result : copy(result));
+  return syncInject('$q').when(dontCopy ? result : copy(result));
 }
 
 /**
  * A resolved $resource promise must contain $-methods, so JSON-copy is not possible
  */
 function resourcePromise(result) {
-  return mox.inject('$q').when(angular.copy(result));
+  return syncInject('$q').when(angular.copy(result));
 }
 
 function reject(error) {
-  return mox.inject('$q').reject(error);
+  return syncInject('$q').reject(error);
 }
 
 /**
@@ -327,7 +365,6 @@ function addSelectors(element, selectors) {
  */
 function requestTest() {
 
-  var self = this;
   var test = {
     _httpMethod: 'GET',
     _data: null
@@ -412,7 +449,7 @@ function requestTest() {
 
   test.run = function run() {
     test._response = test._response || {};
-    mox.inject('$httpBackend').expect(test._httpMethod, { test: validateUrl }, test._data).respond(test._response);
+    syncInject('$httpBackend').expect(test._httpMethod, { test: validateUrl }, test._data).respond(test._response);
 
     var response = test._method.apply(this, test._methodArguments);
     var promise = response.$promise || response;
@@ -425,16 +462,16 @@ function requestTest() {
         .then(successCallback)
         .catch(failureCallback);
 
-      mox.inject('$httpBackend').flush();
+      syncInject('$httpBackend').flush();
 
       var cb = test._expectFail ? failureCallback : successCallback;
-      if (self.isJasmine2) {
+      if (currentSpec.isJasmine2) {
         test._expectedResult(cb.calls.mostRecent().args[0]);
       } else {
         test._expectedResult(cb.mostRecentCall.args[0]);
       }
     } else {
-      mox.inject('$httpBackend').flush();
+      syncInject('$httpBackend').flush();
 
       if (test._expectFail) {
         expect(promise).toReject();

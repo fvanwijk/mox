@@ -1,11 +1,18 @@
-angular.extend(moxConfig, {
+import {mox} from '../../src/mox';
+var m = mox.helpers;
+
+mox.factories = {
   factory2: mox.createMock('factory2', ['methodA']),
   factory3: function ($provide, mock) {
     $provide.value('factory3', mock);
   }
-});
+};
 
 describe('The Mox library', function () {
+
+  beforeEach(function () {
+    angular.module('mox', []);
+  });
 
   beforeEach(function () {
     jasmine.addMatchers({
@@ -97,7 +104,7 @@ describe('The Mox library', function () {
 
       var configFn = function ($provide) {};
       mox.module('test', configFn, 'test2').run();
-      expect(angular.mock.module.apply).toHaveBeenCalledWith(window, ['test', configFn, 'test2']);
+      expect(angular.mock.module.apply).toHaveBeenCalledWith(undefined, ['test', configFn, 'test2']);
     });
 
     it('should initialize the injector', function () {
@@ -116,8 +123,8 @@ describe('The Mox library', function () {
           .mockServices('factory2')
           .run();
 
-        expect(mox.inject('factory2').methodA).toBeSpy();
-        expect(mox.inject('factory2').methodB).not.toBeSpy();
+        expect(m.inject('factory2').methodA).toBeSpy();
+        expect(m.inject('factory2').methodB).not.toBeSpy();
       });
 
       it('should automatically mock a service that is not in moxConfig using the original service and store it in the cache', function () {
@@ -127,8 +134,8 @@ describe('The Mox library', function () {
           .run();
 
         expect(mox.get.factory.methodA).toBeSpy();
-        expect(mox.inject('factory').methodA).toBeSpy();
-        expect(mox.inject('factory').methodB).toBeSpy();
+        expect(m.inject('factory').methodA).toBeSpy();
+        expect(m.inject('factory').methodB).toBeSpy();
       });
 
       it('should replace the service with a service that has spies on its methods, so that "calling through" is possible', function () {
@@ -137,7 +144,7 @@ describe('The Mox library', function () {
           .mockServices('factory')
           .run();
 
-        var spy = mox.inject('factory').methodA;
+        var spy = m.inject('factory').methodA;
         spy.and.callThrough();
         expect(spy()).toBe('methodAResult');
       });
@@ -152,13 +159,13 @@ describe('The Mox library', function () {
       });
 
       it('should mock the filter with a spy', function () {
-        var filter = mox.inject('filter2Filter');
+        var filter = m.inject('filter2Filter');
         expect(filter).toBeSpy();
         expect(filter()).toBeUndefined();
       });
 
       it('should support calling through', function () {
-        var filter = mox.inject('filter2Filter');
+        var filter = m.inject('filter2Filter');
         filter.and.callThrough();
         expect(filter()).toBe('filterResult');
       });
@@ -171,7 +178,7 @@ describe('The Mox library', function () {
     describe('when mocking a resource', function () {
 
       function getResource() {
-        return mox.inject('FooResource');
+        return m.inject('FooResource');
       }
 
       beforeEach(function () {
@@ -197,14 +204,14 @@ describe('The Mox library', function () {
         var FooResource = getResource();
         FooResource.get.and.callThrough();
 
-        requestTest()
+        m.requestTest()
           .whenMethod(FooResource.get)
           .expectGet('path')
           .run();
 
         var mockInstance = new FooResource({ data: 'value' });
 
-        requestTest()
+        m.requestTest()
           .whenMethod(mockInstance.get)
           .expectGet('path')
           .run();
@@ -231,12 +238,12 @@ describe('The Mox library', function () {
       });
 
       it('should call the mock factory function with the passed arguments', function () {
-        expect(mox.inject('factory3')).toBe('argument');
+        expect(m.inject('factory3')).toBe('argument');
       });
 
       describe('when there is no custom factory function', function () {
         it('should do nothing with the extra arguments', function () {
-          expect(mox.inject('factory').methodA).toBeSpy();
+          expect(m.inject('factory').methodA).toBeSpy();
         });
       });
     });
@@ -254,9 +261,9 @@ describe('The Mox library', function () {
       });
 
       it('should mock them all', function () {
-        expect(mox.inject('factory').methodA).toBeSpy();
-        expect(mox.inject('filter2Filter')).toBeSpy();
-        expect(mox.inject('FooResource').get).toBeSpy();
+        expect(m.inject('factory').methodA).toBeSpy();
+        expect(m.inject('filter2Filter')).toBeSpy();
+        expect(m.inject('FooResource').get).toBeSpy();
       });
     });
 
@@ -272,7 +279,7 @@ describe('The Mox library', function () {
         .mockConstants('constant', 'newConstant')
         .run();
 
-      expect(mox.inject('constant')).toEqual('newConstant');
+      expect(m.inject('constant')).toEqual('newConstant');
     });
 
     it('should throw an error when providing no arguments', function () {
@@ -298,7 +305,7 @@ describe('The Mox library', function () {
         .run();
 
       // All but the next directive properties are stripped
-      expect(mox.inject('directiveDirective')[0]).toEqual(jasmine.objectContaining({
+      expect(m.inject('directiveDirective')[0]).toEqual(jasmine.objectContaining({
         name: 'directive',
         scope: {
           key: '='
@@ -352,7 +359,7 @@ describe('The Mox library', function () {
         })
         .run();
 
-      expect(mox.inject('directiveDirective')[0]).toEqual(jasmine.objectContaining({
+      expect(m.inject('directiveDirective')[0]).toEqual(jasmine.objectContaining({
         compile: newCompileFn,
         controller: newControllerFn,
         index: 0,
@@ -377,8 +384,8 @@ describe('The Mox library', function () {
           .mockDirectives('directive')
           .run();
 
-        expect(mox.inject('directiveDirective')).toHaveLength(1);
-        expect(mox.inject('directiveDirective')[0].restrict).toBe('AE');
+        expect(m.inject('directiveDirective')).toHaveLength(1);
+        expect(m.inject('directiveDirective')[0].restrict).toBe('AE');
       });
     });
 
@@ -390,8 +397,8 @@ describe('The Mox library', function () {
         .run();
 
       // The restrict property is unique in this test example, so for readibility this property is used to identify mock
-      expect(mox.inject('directiveDirective')[0].restrict).toBe('AE');
-      expect(mox.inject('directive2Directive')[0].link).toBe(newLinkFn);
+      expect(m.inject('directiveDirective')[0].restrict).toBe('AE');
+      expect(m.inject('directive2Directive')[0].link).toBe(newLinkFn);
     });
 
     it('should throw an error when passing no arguments to mockDirectives', function () {
@@ -407,8 +414,8 @@ describe('The Mox library', function () {
         .disableDirectives('directive')
         .run();
 
-      expect(mox.inject('directiveDirective')).toHaveLength(1);
-      expect(mox.inject('directiveDirective')).toEqual({});
+      expect(m.inject('directiveDirective')).toHaveLength(1);
+      expect(m.inject('directiveDirective')).toEqual({});
     });
 
     it('should mock multiple directives', function () {
@@ -417,8 +424,8 @@ describe('The Mox library', function () {
         .disableDirectives('directive', 'directive2')
         .run();
 
-      expect(mox.inject('directiveDirective')).toEqual({});
-      expect(mox.inject('directive2Directive')).toEqual({});
+      expect(m.inject('directiveDirective')).toEqual({});
+      expect(m.inject('directive2Directive')).toEqual({});
     });
 
     it('should throw an error when providing no arguments', function () {
@@ -433,8 +440,8 @@ describe('The Mox library', function () {
         .mockControllers('controller')
         .run();
 
-      var $scope = createScope();
-      mox.inject('$controller')('controller', $scope); // Controller sets $scope.name = 'testController';
+      var $scope = m.createScope();
+      m.inject('$controller')('controller', $scope); // Controller sets $scope.name = 'testController';
       expect($scope.name).toBeUndefined();
     });
 
@@ -444,10 +451,10 @@ describe('The Mox library', function () {
         .mockControllers('controller', 'controller2')
         .run();
 
-      var $scope = createScope();
-      mox.inject('$controller')('controller', $scope); // Controller sets $scope.name = 'testController';
+      var $scope = m.createScope();
+      m.inject('$controller')('controller', $scope); // Controller sets $scope.name = 'testController';
       expect($scope.name).toBeUndefined();
-      mox.inject('$controller')('controller2', $scope); // Controller sets $scope.name = 'testController2';
+      m.inject('$controller')('controller2', $scope); // Controller sets $scope.name = 'testController2';
       expect($scope.name).toBeUndefined();
     });
 
@@ -463,19 +470,19 @@ describe('The Mox library', function () {
         .mockTemplates(config)
         .run();
 
-      createScope();
+      m.createScope();
     }
 
     it('should mock a template and replace it with a simple alternative containing the template name', function () {
       mockTemplate('template.html');
-      compileTemplate('template.html');
+      m.compileTemplate('template.html');
 
       expect(this.element).toHaveText('This is a mock for template.html');
     });
 
     it('should mock a template with a defined alternative', function () {
       mockTemplate({ 'template.html': '<div>template</div>' });
-      compileTemplate('template.html');
+      m.compileTemplate('template.html');
       expect(this.element).toHaveText('template');
     });
 
@@ -485,10 +492,10 @@ describe('The Mox library', function () {
         .mockTemplates('template.html', { 'template2.html': '<div>template</div>' })
         .run();
 
-      createScope();
+      m.createScope();
 
-      expect(compileTemplate('template.html')).toHaveText('This is a mock for template.html');
-      expect(compileTemplate('template2.html')).toHaveText('template');
+      expect(m.compileTemplate('template.html')).toHaveText('This is a mock for template.html');
+      expect(m.compileTemplate('template2.html')).toHaveText('template');
     });
   });
 
@@ -566,11 +573,11 @@ describe('The Mox library', function () {
 
     it('should register the mock as a value by default', function () {
       expect($provide.value).toHaveBeenCalledWith('factory', mockedFactory);
-      expect(mox.inject('factory')).toBe(mockedFactory);
+      expect(m.inject('factory')).toBe(mockedFactory);
     });
 
     it('should register the mock with a specified recipe', function () {
-      expect(mox.inject('constant')).toBe(mockedConstant);
+      expect(m.inject('constant')).toBe(mockedConstant);
     });
 
     it('should save the mock in the Mox cache', function () {

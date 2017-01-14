@@ -1,4 +1,10 @@
-var karmaFiles = require('test-runner-config').getKarmaFiles(require('./test/mock/testFiles'));
+var karmaFiles = require('test-runner-config').getKarmaFiles(require('./test/mock/testFiles'), {
+  specs: function (file) { return { pattern: file, instrument: true, load: false, ignore: false }; }
+});
+karmaFiles.files = karmaFiles.files.filter(function (file) {
+  return !/^src/.test(file);
+});
+console.log(karmaFiles.files);
 
 module.exports = function (config) {
   config.set({

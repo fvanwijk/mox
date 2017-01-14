@@ -1,8 +1,7 @@
-var moxConfig = {};
-angular.module('mox', [])
-  .service('Mox', MoxBuilder);
+import {helpers} from './helpers';
 
-var mox = angular.injector(['mox']).get('Mox');
+export var mox = new Mox();
+//export helpers;
 
 beforeEach(function () {
   mox.get = {};
@@ -11,7 +10,7 @@ beforeEach(function () {
 /**
  * Constructor function for a Mox object
  */
-function MoxBuilder() {
+function Mox() {
 
   var
     moduleNames,
@@ -82,27 +81,10 @@ function MoxBuilder() {
 
   cleanUp();
 
-  this.factories = moxConfig; // Factory functions for creating mocks
+  this.factories = {}; // Factory functions for creating mocks
   this.get = {}; // Cache for mocked things
+  this.helpers = helpers;
   this.testTemplateAppendSelector = '#mox-container';
-
-  /**
-   * Injects one or multiple services and returns them
-   *
-   * @param {string} name of the inject to get
-   * @returns {Object}
-   */
-  this.inject = function inject(name) {
-    if (!currentSpec.$injector) {
-      throw Error('Sorry, cannot inject ' + name + ' because the injector is not ready yet. Please load a module and call mox.run() or inject()');
-    }
-    var args = Array.prototype.slice.call(arguments, 0);
-    var injects = {};
-    angular.forEach(args, function (injectName) {
-      injects[injectName] = currentSpec.$injector.get(injectName);
-    });
-    return args.length === 1 ? injects[name] : injects;
-  };
 
   /**
    * Saves modules or module config functions to be passed to angular.mocks.module when .run() is called.
@@ -196,7 +178,7 @@ function MoxBuilder() {
 
           // Make sure that the decorator function is called
           postInjectFns.push(function cacheMock() {
-            mox.inject(mockName);
+            helpers.inject(mockName);
           });
         }
       });
@@ -329,7 +311,7 @@ function MoxBuilder() {
     var templates = arguments;
 
     postInjectFns.push(function () {
-      var $templateCache = mox.inject('$templateCache');
+      var $templateCache = helpers.inject('$templateCache');
       angular.forEach(templates, function (templateConfig) {
         var path;
         var template;
@@ -371,7 +353,7 @@ function MoxBuilder() {
     postInjectFns.push(function setupResultsFn() {
       var config = configFn();
       angular.forEach(config, function (mockConfig, mockName) {
-        var mock = mox.inject(mockName);
+        var mock = helpers.inject(mockName);
         if (!(mockName in mox.get)) {
           cleanUp();
           throw new Error(mockName + ' is not in mox.get');
