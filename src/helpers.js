@@ -6,6 +6,11 @@
 var currentSpec;
 beforeEach(function () {
   this.isJasmine2 = /^2/.test(jasmine.version);
+  if (this.isJasmine2) {
+    jasmine.addMatchers(jasmineMoxMatchers.v2);
+  } else {
+    this.addMatchers(jasmineMoxMatchers.v1);
+  }
   currentSpec = this;
 });
 
@@ -329,8 +334,6 @@ function addSelectors(element, selectors) {
  *   .run();
  */
 function requestTest() {
-
-  var self = this;
   var test = {
     _httpMethod: 'GET',
     _data: null
@@ -431,12 +434,14 @@ function requestTest() {
       mox.inject('$httpBackend').flush();
 
       var cb = test._expectFail ? failureCallback : successCallback;
-      if (self.isJasmine2) {
+      if (currentSpec.isJasmine2) {
         test._expectedResult(cb.calls.mostRecent().args[0]);
       } else {
         test._expectedResult(cb.mostRecentCall.args[0]);
       }
     } else {
+      // Avoid `Possibly Unhandled Rejection` error but still fulfill the returned promise with a rejection, see angular/angular.js#15624
+      promise.catch(angular.noop);
       mox.inject('$httpBackend').flush();
 
       if (test._expectFail) {

@@ -8,18 +8,19 @@ module.exports = [
       'node_modules/angular-resource/angular-resource.js',
       'node_modules/angular-mocks/angular-mocks.js',
       'node_modules/jasmine-jquery/lib/jasmine-jquery.js',
-      'node_modules/jasmine-mox-matchers/src/jasmine-mox-matchers.js'
+      'node_modules/jasmine-mox-matchers/dist/jasmine-mox-matchers.js'
     ]
   },
   {
     type: 'config',
     files: [
-      'test/mock/*.js'
+
     ]
   },
   {
     type: 'src',
     files: [
+      'test/mock/*.js',
       'src/**/*.js'
     ]
   },
@@ -32,7 +33,7 @@ module.exports = [
   {
     type: 'specs',
     files: [
-      'test/spec/**/*.js'
+      'test/spec/**/helpers-spec.js'
     ]
   }
 ];
