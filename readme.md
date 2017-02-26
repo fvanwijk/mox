@@ -1,5 +1,7 @@
 # Mox: Mocking utility library for AngularJS apps
 
+[![Greenkeeper badge](https://badges.greenkeeper.io/fvanwijk/mox.svg)](https://greenkeeper.io/)
+
 [![Build Status](https://travis-ci.org/fvanwijk/mox.svg?branch=master)](https://travis-ci.org/fvanwijk/mox)
 [![Test Coverage](https://codeclimate.com/github/fvanwijk/mox/badges/coverage.svg)](https://codeclimate.com/github/fvanwijk/mox)
 [![Code Climate](https://codeclimate.com/github/fvanwijk/mox/badges/gpa.svg)](https://codeclimate.com/github/fvanwijk/mox)
