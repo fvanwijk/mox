@@ -18,6 +18,7 @@
     "defer": false,
     "getJSONFixture": false,
     "injectEnv": false,
+    "jasmineMoxMatchers": false,
     "mox": true,
     "moxConfig": true,
     "nonResolvingResourceResult": false,
