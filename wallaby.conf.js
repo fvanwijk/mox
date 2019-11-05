@@ -1,6 +1,8 @@
-var wallabyFiles = require('test-runner-config').getWallabyFiles(require('./test/mock/testFiles'));
+var wallabyFiles = require('test-runner-config').getWallabyFiles(
+  require('./test/mock/testFiles')
+);
 
-module.exports = function () {
+module.exports = function() {
   return {
     //testFramework: 'jasmine@1.3.1',
     files: wallabyFiles.files,

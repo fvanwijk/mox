@@ -1,4 +1,4 @@
-module.exports = function (grunt) {
+module.exports = function(grunt) {
   require('load-grunt-tasks')(grunt);
 
   var paths = {
@@ -15,10 +15,7 @@ module.exports = function (grunt) {
     },
     concat: {
       dist: {
-        src: [
-          paths.src + '/**/*.js',
-          '!' + paths.src + '/moxConfig.js'
-        ],
+        src: [paths.src + '/**/*.js', '!' + paths.src + '/moxConfig.js'],
         dest: paths.dist + '/<%= pkg.name %>.js'
       }
     },
@@ -89,5 +86,4 @@ module.exports = function (grunt) {
   grunt.registerTask('build', ['clean', 'test', 'copy', 'concat', 'uglify']);
   grunt.registerTask('test', ['jscs', 'jshint', 'karma', 'coverage']);
   grunt.registerTask('default', ['build']);
-
 };

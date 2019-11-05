@@ -1,10 +1,9 @@
 var moxConfig = {};
-angular.module('mox', [])
-  .service('Mox', MoxBuilder);
+angular.module('mox', []).service('Mox', MoxBuilder);
 
 var mox = angular.injector(['mox']).get('Mox');
 
-beforeEach(function () {
+beforeEach(function() {
   mox.get = {};
 });
 
@@ -12,11 +11,7 @@ beforeEach(function () {
  * Constructor function for a Mox object
  */
 function MoxBuilder() {
-
-  var
-    moduleNames,
-    moduleFns,
-    postInjectFns;
+  var moduleNames, moduleFns, postInjectFns;
 
   function execute() {
     var moduleResult;
@@ -24,7 +19,9 @@ function MoxBuilder() {
       moduleResult = angular.mock.module.apply(this, moduleFns);
       angular.mock.inject(); // to make sure that moduleFns had ran
     }
-    postInjectFns.forEach(function (cb) { cb(); });
+    postInjectFns.forEach(function(cb) {
+      cb();
+    });
     return moduleResult;
   }
 
@@ -45,7 +42,7 @@ function MoxBuilder() {
 
   function createResourceConstructor(resource) {
     // Create a mocked constructor that returns the mock itself plus the data that is provided as argument
-    var fn = function (data) {
+    var fn = function(data) {
       return angular.extend({}, resource, data);
     };
     resource.constructor = jasmine.createSpy('constructor');
@@ -94,11 +91,15 @@ function MoxBuilder() {
    */
   this.inject = function inject(name) {
     if (!currentSpec.$injector) {
-      throw Error('Sorry, cannot inject ' + name + ' because the injector is not ready yet. Please load a module and call mox.run() or inject()');
+      throw Error(
+        'Sorry, cannot inject ' +
+          name +
+          ' because the injector is not ready yet. Please load a module and call mox.run() or inject()'
+      );
     }
     var args = Array.prototype.slice.call(arguments, 0);
     var injects = {};
-    angular.forEach(args, function (injectName) {
+    angular.forEach(args, function(injectName) {
       injects[injectName] = currentSpec.$injector.get(injectName);
     });
     return args.length === 1 ? injects[name] : injects;
@@ -111,7 +112,7 @@ function MoxBuilder() {
    */
   this.module = function module() {
     var args = Array.prototype.slice.call(arguments, 0);
-    angular.forEach(args, function (arg) {
+    angular.forEach(args, function(arg) {
       if (angular.isString(arg)) {
         moduleNames.push(arg);
       }
@@ -132,7 +133,7 @@ function MoxBuilder() {
   this.mockServices = function mockServices() {
     function getMethodNames(obj) {
       var methodNames = [];
-      angular.forEach(obj, function (method, methodName) {
+      angular.forEach(obj, function(method, methodName) {
         if (angular.isFunction(method)) {
           methodNames.push(methodName);
         }
@@ -148,7 +149,7 @@ function MoxBuilder() {
           service = service.filter;
         }
       } else {
-        angular.forEach(getMethodNames(service), function (methodName) {
+        angular.forEach(getMethodNames(service), function(methodName) {
           if (!service[methodName].isSpy) {
             spyOn(service, methodName);
 
@@ -172,7 +173,7 @@ function MoxBuilder() {
     var mockNames = arguments;
 
     moduleFns.push(function mockServicesFn($provide) {
-      angular.forEach(mockNames, function (mockName) {
+      angular.forEach(mockNames, function(mockName) {
         var mockArgs;
         if (angular.isArray(mockName)) {
           mockArgs = angular.copy(mockName);
@@ -185,7 +186,7 @@ function MoxBuilder() {
         if (mockName in mox.factories) {
           mox.factories[mockName].apply(this, mockArgs);
         } else {
-          $provide.decorator(mockName, function ($delegate) {
+          $provide.decorator(mockName, function($delegate) {
             if (!(mockName in mox.get)) {
               $delegate = spyOnService($delegate);
               mox.get[mockName] = $delegate;
@@ -221,7 +222,7 @@ function MoxBuilder() {
     }
 
     moduleFns.push(function mockConstantsFn($provide) {
-      angular.forEach(config, function (value, mockName) {
+      angular.forEach(config, function(value, mockName) {
         mox.save($provide, mockName, value, 'constant');
       });
     });
@@ -251,13 +252,15 @@ function MoxBuilder() {
     var directiveNames = arguments;
 
     moduleFns.push(function mockDirectivesFn($provide) {
-      angular.forEach(directiveNames, function (directive) {
-        var mock = angular.isString(directive) ? { name: directive } : directive;
+      angular.forEach(directiveNames, function(directive) {
+        var mock = angular.isString(directive)
+          ? { name: directive }
+          : directive;
         /*
          * Cannot use $compileProvider.directive because that does not override the original directive(s) with this name.
          * We decorate the original directive so that we can reuse the isolate bindings and other non-mockable DDO properties.
          */
-        $provide.decorator(mock.name + 'Directive', function ($delegate) {
+        $provide.decorator(mock.name + 'Directive', function($delegate) {
           angular.extend($delegate[0], {
             require: mock.require || undefined,
             template: mock.template || undefined,
@@ -282,14 +285,16 @@ function MoxBuilder() {
    * @param {string[]|string} directiveName directive(s) to disable
    * @returns {Object}
    */
-  this.disableDirectives = function () {
+  this.disableDirectives = function() {
     assertDeprecatedArguments(arguments);
 
     var directiveNames = arguments;
 
     moduleFns.push(function disableDirectivesFn($provide) {
-      angular.forEach(directiveNames, function (directiveName) {
-        $provide.factory(directiveName + 'Directive', function () { return {}; });
+      angular.forEach(directiveNames, function(directiveName) {
+        $provide.factory(directiveName + 'Directive', function() {
+          return {};
+        });
       });
     });
 
@@ -308,8 +313,8 @@ function MoxBuilder() {
 
     var controllerNames = arguments;
 
-    moduleFns.push(function ($controllerProvider) {
-      angular.forEach(controllerNames, function (controllerName) {
+    moduleFns.push(function($controllerProvider) {
+      angular.forEach(controllerNames, function(controllerName) {
         $controllerProvider.register(controllerName, angular.noop);
       });
     });
@@ -328,16 +333,16 @@ function MoxBuilder() {
 
     var templates = arguments;
 
-    postInjectFns.push(function () {
+    postInjectFns.push(function() {
       var $templateCache = mox.inject('$templateCache');
-      angular.forEach(templates, function (templateConfig) {
+      angular.forEach(templates, function(templateConfig) {
         var path;
         var template;
         if (angular.isString(templateConfig)) {
           path = templateConfig;
           template = '<div>This is a mock for ' + path + '</div>';
         } else {
-          angular.forEach(templateConfig, function (val, key) {
+          angular.forEach(templateConfig, function(val, key) {
             template = val;
             path = key;
           });
@@ -370,7 +375,7 @@ function MoxBuilder() {
   this.setupResults = function setupResults(configFn) {
     postInjectFns.push(function setupResultsFn() {
       var config = configFn();
-      angular.forEach(config, function (mockConfig, mockName) {
+      angular.forEach(config, function(mockConfig, mockName) {
         var mock = mox.inject(mockName);
         if (!(mockName in mox.get)) {
           cleanUp();
@@ -386,15 +391,24 @@ function MoxBuilder() {
         }
 
         // Iterate over methods of mock
-        if (typeof mockConfig === 'object' && mockConfig.constructor === Object) {
-          angular.forEach(mockConfig, function (returnValue, method) {
+        if (
+          typeof mockConfig === 'object' &&
+          mockConfig.constructor === Object
+        ) {
+          angular.forEach(mockConfig, function(returnValue, method) {
             if (!(method in mock)) {
               cleanUp();
-              throw new Error('Could not mock return value. No method ' + method + ' created in mock for ' + mockName);
+              throw new Error(
+                'Could not mock return value. No method ' +
+                  method +
+                  ' created in mock for ' +
+                  mockName
+              );
             }
             setSpyResult(mock[method], returnValue);
           });
-        } else { // the mock itself is a spy
+        } else {
+          // the mock itself is a spy
           setSpyResult(mock, mockConfig);
         }
       });
@@ -441,9 +455,7 @@ function MoxBuilder() {
    * @returns {Object}
    */
   this.createMock = function createMock(mockName, mockedMethods) {
-
-    return function ($provide, nameOverride) {
-
+    return function($provide, nameOverride) {
       var mock;
       if (angular.isUndefined(mockedMethods)) {
         mock = jasmine.createSpy(mockName);
@@ -452,7 +464,12 @@ function MoxBuilder() {
       }
 
       if ($provide) {
-        mox.save($provide, nameOverride || mockName, mock, mockedMethods === false ? 'constant' : undefined);
+        mox.save(
+          $provide,
+          nameOverride || mockName,
+          mock,
+          mockedMethods === false ? 'constant' : undefined
+        );
       }
 
       return mock;
@@ -482,7 +499,7 @@ function MoxBuilder() {
       allMethods['$' + methodName] = '$' + methodName;
     }
     angular.forEach(methodNames, addToMethodList);
-    return function ($provide) {
+    return function($provide) {
       var mock = jasmine.createSpyObj(mockName, Object.keys(allMethods));
 
       mock = createResourceConstructor(mock);

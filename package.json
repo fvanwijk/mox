@@ -22,13 +22,14 @@
     "grunt-contrib-jshint": "1.1.0",
     "grunt-contrib-uglify": "2.1.0",
     "grunt-istanbul-coverage": "0.1.4",
-    "grunt-jscs": "3.0.1",
     "grunt-karma": "2.0.0",
+    "eslint": "6.6.0",
+    "eslint-config-prettier": "6.5.0",
+    "eslint-plugin-prettier": "3.1.1",
     "jasmine-core": "2.5.2",
     "jasmine-jquery": "2.1.1",
     "jasmine-mox-matchers": "1.0.0",
     "jquery": "3.1.1",
-    "jshint-stylish": "2.2.1",
     "karma": "1.5.0",
     "karma-coverage": "1.1.1",
     "karma-jasmine": "1.1.0",
@@ -36,11 +37,13 @@
     "load-grunt-tasks": "3.5.2",
     "lodash": "4.17.4",
     "phantomjs-prebuilt": "2.1.14",
-    "test-runner-config": "0.5.0"
+    "prettier": "1.18.2",
+    "test-runner-config": "0.5.0",
   },
   "license": "MIT",
   "scripts": {
     "test": "grunt test",
     "prepublish": "grunt"
+    "lint": "eslint .",
   }
 }

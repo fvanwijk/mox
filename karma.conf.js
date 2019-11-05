@@ -1,6 +1,8 @@
-var karmaFiles = require('test-runner-config').getKarmaFiles(require('./test/mock/testFiles'));
+var karmaFiles = require('test-runner-config').getKarmaFiles(
+  require('./test/mock/testFiles')
+);
 
-module.exports = function (config) {
+module.exports = function(config) {
   config.set({
     basePath: '',
     frameworks: ['jasmine'],
@@ -10,11 +12,7 @@ module.exports = function (config) {
     reporters: ['progress', 'coverage'],
     coverageReporter: {
       dir: 'test/coverage',
-      reporters: [
-        { type: 'lcov' },
-        { type: 'text-summary' },
-        { type: 'json' }
-      ]
+      reporters: [{ type: 'lcov' }, { type: 'text-summary' }, { type: 'json' }]
     },
     preprocessors: {
       'src/**/*.js': ['coverage']
@@ -22,7 +20,7 @@ module.exports = function (config) {
     captureTimeout: 5000,
     logLevel: config.LOG_ERROR,
     autoWatch: false,
-    browsers: ['PhantomJS'],
+    browsers: ['jsdom'],
     singleRun: true
   });
 };

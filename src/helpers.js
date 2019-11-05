@@ -4,7 +4,7 @@
 
 // Save the current spec for later use (Jasmine 2 compatibility)
 var currentSpec;
-beforeEach(function () {
+beforeEach(function() {
   this.isJasmine2 = /^2/.test(jasmine.version);
   if (this.isJasmine2) {
     jasmine.addMatchers(jasmineMoxMatchers.v2);
@@ -17,7 +17,7 @@ beforeEach(function () {
 /*
  * angular-mocks v1.2.x clears the cache after every spec. We do not want this when we compile a template once in a beforeAll
  */
-if (typeof beforeAll !== 'undefined')  {
+if (typeof beforeAll !== 'undefined') {
   angular.mock.clearDataCache = angular.noop;
 }
 
@@ -99,14 +99,21 @@ function createController(ctrlName, $scope, locals, bindings) {
  */
 function compileHtml(html, $scope, appendToBody) {
   $scope = $scope || currentSpec.$scope;
-  if (appendToBody === undefined) { appendToBody = true; }
+  if (appendToBody === undefined) {
+    appendToBody = true;
+  }
 
   var element = mox.inject('$compile')(html)($scope);
   var body = angular.element(document.body);
   body.find(mox.testTemplateAppendSelector).remove();
   if (appendToBody) {
-    var testTemplate = mox.testTemplatePath ? jasmine.getFixtures().read(mox.testTemplatePath) : angular.element('<div id="mox-container">');
-    body.append(testTemplate).find(mox.testTemplateAppendSelector).append(element);
+    var testTemplate = mox.testTemplatePath
+      ? jasmine.getFixtures().read(mox.testTemplatePath)
+      : angular.element('<div id="mox-container">');
+    body
+      .append(testTemplate)
+      .find(mox.testTemplateAppendSelector)
+      .append(element);
   }
 
   currentSpec.element = element;
@@ -155,7 +162,7 @@ function reject(error) {
  * The second argument must be the mock that has the $-methods to set on the $resource result
  */
 function resourceResult(result, mock) {
-  angular.forEach(mock, function (fn, fnName) {
+  angular.forEach(mock, function(fn, fnName) {
     if (fnName[0] === '$') {
       result[fnName] = fn;
     }
@@ -267,18 +274,19 @@ function rejectingResourceResult(errorMessage) {
  * @returns {Object} element
  */
 function addSelectors(element, selectors) {
-
   function checkAndSetFn(obj, prop, fn) {
     var property = obj[prop];
     if (angular.isUndefined(property)) {
       obj[prop] = fn;
-    } else if (!(angular.isFunction(property) && property.name === 'moxExtendElement')) {
+    } else if (
+      !(angular.isFunction(property) && property.name === 'moxExtendElement')
+    ) {
       throw Error('Property ' + prop + ' already defined on element');
     }
   }
 
   function addChildFn(element, children) {
-    angular.forEach(children, function (child, idx) {
+    angular.forEach(children, function(child, idx) {
       var name = angular.isObject(child) ? child.name : child;
 
       checkAndSetFn(element, name, function moxExtendElement() {
@@ -293,9 +301,12 @@ function addSelectors(element, selectors) {
   function findElement(element, value, args) {
     if (value) {
       if (angular.isString(value) || value.selector) {
-        var replacedSelector = (value.selector || value).replace(/{(\d+)}/g, function (match, group) {
-          return args[group];
-        });
+        var replacedSelector = (value.selector || value).replace(
+          /{(\d+)}/g,
+          function(match, group) {
+            return args[group];
+          }
+        );
         return element.find(replacedSelector);
       } else if (value.repeater) {
         var elements = element.find(value.repeater);
@@ -305,9 +316,8 @@ function addSelectors(element, selectors) {
     return angular.element(element);
   }
 
-  angular.forEach(selectors, function (value, key) {
-    var
-      children = value.children,
+  angular.forEach(selectors, function(value, key) {
+    var children = value.children,
       sub = value.sub;
 
     checkAndSetFn(element, key, function moxExtendElement() {
@@ -418,7 +428,10 @@ function requestTest() {
 
   test.run = function run() {
     test._response = test._response || {};
-    mox.inject('$httpBackend').expect(test._httpMethod, { test: validateUrl }, test._data).respond(test._response);
+    mox
+      .inject('$httpBackend')
+      .expect(test._httpMethod, { test: validateUrl }, test._data)
+      .respond(test._response);
 
     var response = test._method.apply(this, test._methodArguments);
     var promise = response.$promise || response;
@@ -427,9 +440,7 @@ function requestTest() {
       var successCallback = jasmine.createSpy('success callback');
       var failureCallback = jasmine.createSpy('failure callback');
 
-      promise
-        .then(successCallback)
-        .catch(failureCallback);
+      promise.then(successCallback).catch(failureCallback);
 
       mox.inject('$httpBackend').flush();
 
@@ -450,7 +461,6 @@ function requestTest() {
         expect(promise).toResolve();
       }
     }
-
   };
 
   return test;

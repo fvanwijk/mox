@@ -13,27 +13,18 @@ module.exports = [
   },
   {
     type: 'config',
-    files: [
-
-    ]
+    files: []
   },
   {
     type: 'src',
-    files: [
-      'test/mock/*.js',
-      'src/**/*.js'
-    ]
+    files: ['test/mock/*.js', 'src/**/*.js']
   },
   {
     type: 'mock',
-    files: [
-      'test/mock/html/**/*.html'
-    ]
+    files: ['test/mock/html/**/*.html']
   },
   {
     type: 'specs',
-    files: [
-      'test/spec/**/helpers-spec.js'
-    ]
+    files: ['test/spec/**/helpers-spec.js']
   }
 ];
