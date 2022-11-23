@@ -5,7 +5,7 @@
 // Save the current spec for later use (Jasmine 2 compatibility)
 var currentSpec;
 beforeEach(function() {
-  this.isJasmine2 = /^2/.test(jasmine.version);
+  this.isJasmine2 = !/^1/.test(jasmine.version);
   if (this.isJasmine2) {
     jasmine.addMatchers(jasmineMoxMatchers.v2);
   } else {

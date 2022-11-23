@@ -1,5 +1,4 @@
 test
 .*
-Gruntfile.js
 *.conf.js
 !dist

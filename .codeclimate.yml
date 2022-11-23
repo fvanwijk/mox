@@ -1,7 +1,5 @@
-languages:
-  Ruby: false
-  JavaScript: true
-  PHP: false
-  Python: false
-exclude_paths:
-- "dist/*.js"
+version: 2
+plugins:
+  eslint:
+    enabled: true
+    channel: 'eslint-5'

@@ -8,7 +8,7 @@ module.exports = function() {
     files: wallabyFiles.files,
     tests: wallabyFiles.tests,
     env: {
-      runner: require('phantomjs-prebuilt').path,
+      runner: require('jsdom').path,
       params: {
         runner: '--web-security=false'
       }
